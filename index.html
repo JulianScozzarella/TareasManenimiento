@@ -7,36 +7,36 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
-    body { background-color: #f1f5f9; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: #f1f5f9; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 15px; }
     .sheraton-navy { background-color: #1B365D; }
     .sheraton-gold { color: #C5A880; }
-    .dropdown-panel { max-height: 240px; overflow-y: auto; }
+    .dropdown-panel { max-height: 260px; overflow-y: auto; }
   </style>
 </head>
 <body class="text-slate-800" onclick="cerrarDropdownsAlClickAfuera(event)">
 
   <!-- BARRA SUPERIOR -->
   <header class="sheraton-navy text-white shadow-lg sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-xl font-bold sheraton-gold border border-white/20">
+        <div class="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center text-2xl font-bold sheraton-gold border border-white/20">
           S
         </div>
         <div>
-          <h1 class="text-lg font-bold tracking-wide">SHERATON PILAR · INGENIERÍA Y MANTENIMIENTO</h1>
-          <p class="text-xs text-slate-300 flex items-center gap-2">
+          <h1 class="text-xl font-bold tracking-wide">SHERATON PILAR · INGENIERÍA Y MANTENIMIENTO</h1>
+          <p class="text-sm text-slate-300 flex items-center gap-2">
             <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block animate-pulse"></span>
             <span id="statusText">Conectando con Base Madre en Google Sheets...</span>
           </p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <button onclick="cargarDatos()" class="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium flex items-center gap-2 transition">
+      <div class="flex items-center gap-2.5">
+        <button onclick="cargarDatos()" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-medium flex items-center gap-2 transition">
           <i id="iconoSync" class="fa-solid fa-rotate"></i> Sincronizar
         </button>
-        <button onclick="abrirModalCarga('TAREA')" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs flex items-center gap-2 shadow transition">
-          <i class="fa-solid fa-plus"></i> Nueva Orden / Subtarea
+        <button onclick="abrirModalCarga('TAREA')" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-sm flex items-center gap-2 shadow transition">
+          <i class="fa-solid fa-plus"></i> Cargar Tarea / Subtarea
         </button>
       </div>
     </div>
@@ -47,147 +47,141 @@
     <!-- SECCIÓN 1: KPIs E INDICADORES DE RESOLUCIÓN -->
     <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       <div onclick="setQuickFilter('ALL')" class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
-        <div class="text-xs font-semibold text-slate-400 uppercase">Total Órdenes</div>
+        <div class="text-xs font-bold text-slate-500 uppercase">Total Órdenes</div>
         <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiTotal" class="text-2xl font-bold text-slate-800">0</span>
-          <i class="fa-solid fa-clipboard-list text-slate-300 text-xl"></i>
+          <span id="kpiTotal" class="text-3xl font-extrabold text-slate-800">0</span>
+          <i class="fa-solid fa-clipboard-list text-slate-300 text-2xl"></i>
         </div>
       </div>
 
       <div onclick="setQuickFilter('PENDING')" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-amber-500 cursor-pointer hover:bg-amber-50/40 transition">
-        <div class="text-xs font-semibold text-amber-700 uppercase">Activas / Pendientes</div>
+        <div class="text-xs font-bold text-amber-700 uppercase">Activas / Pendientes</div>
         <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiPendientes" class="text-2xl font-bold text-amber-600">0</span>
-          <span class="text-[11px] text-amber-600 font-medium underline">Filtrar</span>
+          <span id="kpiPendientes" class="text-3xl font-extrabold text-amber-600">0</span>
+          <span class="text-xs text-amber-700 font-semibold underline">Ver pendientes</span>
         </div>
       </div>
 
       <div onclick="setQuickFilter('CRITICAL')" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-rose-600 cursor-pointer hover:bg-rose-50/40 transition">
-        <div class="text-xs font-semibold text-rose-700 uppercase">Prioridad Crítica</div>
+        <div class="text-xs font-bold text-rose-700 uppercase">Prioridad Crítica</div>
         <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiCriticas" class="text-2xl font-bold text-rose-600">0</span>
-          <i class="fa-solid fa-triangle-exclamation text-rose-400 text-xl"></i>
+          <span id="kpiCriticas" class="text-3xl font-extrabold text-rose-600">0</span>
+          <i class="fa-solid fa-triangle-exclamation text-rose-400 text-2xl"></i>
         </div>
       </div>
 
       <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-blue-600">
-        <div class="text-xs font-semibold text-blue-700 uppercase">En Proceso</div>
+        <div class="text-xs font-bold text-blue-700 uppercase">En Proceso</div>
         <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiEnProceso" class="text-2xl font-bold text-blue-600">0</span>
-          <i class="fa-solid fa-gears text-blue-300 text-xl"></i>
+          <span id="kpiEnProceso" class="text-3xl font-extrabold text-blue-600">0</span>
+          <i class="fa-solid fa-gears text-blue-300 text-2xl"></i>
         </div>
       </div>
 
       <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-emerald-600">
-        <div class="text-xs font-semibold text-emerald-700 uppercase">Tasa de Resolución</div>
+        <div class="text-xs font-bold text-emerald-700 uppercase">Tasa de Resolución</div>
         <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiTasaResolucion" class="text-2xl font-bold text-emerald-600">0%</span>
-          <span id="kpiCerradasTexto" class="text-xs text-slate-400">0 cerradas</span>
+          <span id="kpiTasaResolucion" class="text-3xl font-extrabold text-emerald-600">0%</span>
+          <span id="kpiCerradasTexto" class="text-xs text-slate-500 font-medium">0 cerradas</span>
         </div>
       </div>
 
       <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-        <div class="text-xs font-semibold text-slate-400 uppercase">Subtareas Listas</div>
+        <div class="text-xs font-bold text-slate-500 uppercase">Subtareas Listas</div>
         <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiSubtareas" class="text-2xl font-bold text-indigo-600">0/0</span>
-          <span id="kpiSubtareasPct" class="text-xs font-semibold text-indigo-500">0%</span>
+          <span id="kpiSubtareas" class="text-3xl font-extrabold text-indigo-600">0/0</span>
+          <span id="kpiSubtareasPct" class="text-sm font-bold text-indigo-500">0%</span>
         </div>
       </div>
     </section>
 
     <!-- SECCIÓN 2: BARRA DE MÚLTIPLES FILTROS CON CHECKBOXES -->
-    <section class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 space-y-4">
+    <section class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 space-y-4">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
         <div class="flex flex-wrap items-center gap-2">
-          <span class="text-xs font-bold uppercase text-slate-400 mr-1"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Vistas Rápidas:</span>
-          <button id="btnQuickAll" onclick="setQuickFilter('ALL')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white transition">
+          <span class="text-xs font-bold uppercase text-slate-500 mr-1"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Vistas Rápidas:</span>
+          <button id="btnQuickAll" onclick="setQuickFilter('ALL')" class="px-3.5 py-2 rounded-full text-sm font-semibold bg-slate-800 text-white transition">
             Todas las Tareas
           </button>
-          <button id="btnQuickPending" onclick="setQuickFilter('PENDING')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-800 transition">
+          <button id="btnQuickPending" onclick="setQuickFilter('PENDING')" class="px-3.5 py-2 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-800 transition">
             🔥 Solo Pendientes / En Curso
           </button>
-          <button id="btnQuickCritical" onclick="setQuickFilter('CRITICAL')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-rose-100 hover:text-rose-800 transition">
+          <button id="btnQuickCritical" onclick="setQuickFilter('CRITICAL')" class="px-3.5 py-2 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-rose-100 hover:text-rose-800 transition">
             🚨 Urgencias Críticas
           </button>
-          <button onclick="expandirContraerTodas()" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition">
+          <button onclick="expandirContraerTodas()" class="px-3.5 py-2 rounded-full text-sm font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition">
             <i class="fa-solid fa-list-check mr-1"></i> Desplegar / Contraer Subtareas
           </button>
         </div>
 
         <div class="flex items-center gap-2">
-          <div class="bg-slate-100 p-1 rounded-lg flex text-xs font-semibold">
-            <button id="btnVistaTabla" onclick="cambiarVista('TABLA')" class="px-3 py-1.5 rounded-md bg-white shadow text-slate-800 transition">
-              <i class="fa-solid fa-table mr-1"></i> Tabla General
+          <div class="bg-slate-100 p-1 rounded-lg flex text-sm font-semibold">
+            <button id="btnVistaTabla" onclick="cambiarVista('TABLA')" class="px-3.5 py-1.5 rounded-md bg-white shadow text-slate-800 transition">
+              <i class="fa-solid fa-table mr-1"></i> Tabla
             </button>
-            <button id="btnVistaTarjetas" onclick="cambiarVista('TARJETAS')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">
+            <button id="btnVistaTarjetas" onclick="cambiarVista('TARJETAS')" class="px-3.5 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">
               <i class="fa-solid fa-grip mr-1"></i> Tarjetas
             </button>
           </div>
-          <button onclick="limpiarFiltros()" class="text-xs font-semibold text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition">
-            <i class="fa-solid fa-filter-circle-xmark mr-1"></i>Limpiar Filtros
+          <button onclick="limpiarFiltros()" class="text-sm font-semibold text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition">
+            <i class="fa-solid fa-filter-circle-xmark mr-1"></i>Limpiar
           </button>
         </div>
       </div>
 
       <!-- Filtros Multi-Selección con Checkboxes -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <!-- Buscador de texto -->
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Buscar palabra o ID</label>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Buscar palabra o ID</label>
           <div class="relative">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-            <input id="filtroTexto" oninput="renderizar()" type="text" placeholder="Ej: T-001, Las Vasijas..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600" />
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+            <input id="filtroTexto" oninput="renderizar()" type="text" placeholder="Ej: T-001, Las Vasijas..." class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600" />
           </div>
         </div>
 
-        <!-- Dropdown Checkbox: Sector -->
         <div class="relative dropdown-multi">
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Sector (Multi-opción)</label>
-          <button type="button" onclick="toggleDropdown('ddSector')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+          <label class="block text-xs font-bold text-slate-600 mb-1">Sector (Multi-opción)</label>
+          <button type="button" onclick="toggleDropdown('ddSector')" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
             <span id="labelSector" class="truncate">Todos los sectores</span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+            <i class="fa-solid fa-chevron-down text-xs text-slate-400 ml-1"></i>
           </button>
-          <div id="ddSector" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
+          <div id="ddSector" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-sm"></div>
         </div>
 
-        <!-- Dropdown Checkbox: Ubicación -->
         <div class="relative dropdown-multi">
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Ubicación Detalle</label>
-          <button type="button" onclick="toggleDropdown('ddUbicacion')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+          <label class="block text-xs font-bold text-slate-600 mb-1">Ubicación Detalle</label>
+          <button type="button" onclick="toggleDropdown('ddUbicacion')" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
             <span id="labelUbicacion" class="truncate">Todas las ubicaciones</span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+            <i class="fa-solid fa-chevron-down text-xs text-slate-400 ml-1"></i>
           </button>
-          <div id="ddUbicacion" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
+          <div id="ddUbicacion" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-sm"></div>
         </div>
 
-        <!-- Dropdown Checkbox: Estado -->
         <div class="relative dropdown-multi">
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Estado (Multi-opción)</label>
-          <button type="button" onclick="toggleDropdown('ddEstado')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+          <label class="block text-xs font-bold text-slate-600 mb-1">Estado (Multi-opción)</label>
+          <button type="button" onclick="toggleDropdown('ddEstado')" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
             <span id="labelEstado" class="truncate">Todos los estados</span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+            <i class="fa-solid fa-chevron-down text-xs text-slate-400 ml-1"></i>
           </button>
-          <div id="ddEstado" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
+          <div id="ddEstado" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-sm"></div>
         </div>
 
-        <!-- Dropdown Checkbox: Prioridad -->
         <div class="relative dropdown-multi">
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Prioridad (Multi-opción)</label>
-          <button type="button" onclick="toggleDropdown('ddPrioridad')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+          <label class="block text-xs font-bold text-slate-600 mb-1">Prioridad (Multi-opción)</label>
+          <button type="button" onclick="toggleDropdown('ddPrioridad')" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
             <span id="labelPrioridad" class="truncate">Todas las prioridades</span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+            <i class="fa-solid fa-chevron-down text-xs text-slate-400 ml-1"></i>
           </button>
-          <div id="ddPrioridad" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
+          <div id="ddPrioridad" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-sm"></div>
         </div>
 
-        <!-- Dropdown Checkbox: Personal -->
         <div class="relative dropdown-multi">
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Supervisor / Operario</label>
-          <button type="button" onclick="toggleDropdown('ddPersona')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+          <label class="block text-xs font-bold text-slate-600 mb-1">Supervisor / Operario</label>
+          <button type="button" onclick="toggleDropdown('ddPersona')" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
             <span id="labelPersona" class="truncate">Todo el equipo</span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+            <i class="fa-solid fa-chevron-down text-xs text-slate-400 ml-1"></i>
           </button>
-          <div id="ddPersona" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
+          <div id="ddPersona" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-sm"></div>
         </div>
       </div>
     </section>
@@ -197,68 +191,84 @@
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="sheraton-navy text-white text-[11px] uppercase tracking-wider">
-              <th class="py-3 px-3 w-16 text-center">Subtareas</th>
-              <th class="py-3 px-3">ID / Fecha</th>
-              <th class="py-3 px-3">Sector y Ubicación</th>
-              <th class="py-3 px-3">Tarea Principal / Categoría</th>
-              <th class="py-3 px-3 text-center">Prioridad</th>
-              <th class="py-3 px-3">Supervisor</th>
-              <th class="py-3 px-3 text-center">Estado</th>
-              <th class="py-3 px-3 w-44">Progreso Subtareas</th>
+            <tr class="sheraton-navy text-white text-xs uppercase tracking-wider">
+              <th class="py-3.5 px-3 w-20 text-center">Pasos</th>
+              <th class="py-3.5 px-3">ID / Fecha</th>
+              <th class="py-3.5 px-3">Sector y Ubicación</th>
+              <th class="py-3.5 px-3">Tarea Principal / Comentarios / Foto</th>
+              <th class="py-3.5 px-3 text-center">Prioridad</th>
+              <th class="py-3.5 px-3">Creado / Sup.</th>
+              <th class="py-3.5 px-3 text-center">Estado</th>
+              <th class="py-3.5 px-3 w-48">Progreso Subtareas</th>
             </tr>
           </thead>
-          <tbody id="cuerpoTabla" class="divide-y divide-slate-200 text-xs"></tbody>
+          <tbody id="cuerpoTabla" class="divide-y divide-slate-200 text-sm"></tbody>
         </table>
       </div>
-      <div id="mensajeSinResultados" class="hidden py-12 text-center text-slate-400 text-sm">
+      <div id="mensajeSinResultados" class="hidden py-12 text-center text-slate-400 text-base">
         No se encontraron tareas con los filtros seleccionados.
       </div>
     </section>
 
     <!-- SECCIÓN 4: VISTA DE TARJETAS -->
-    <section id="contenedorTarjetas" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></section>
+    <section id="contenedorTarjetas" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></section>
 
   </main>
 
-  <!-- MODAL DOBLE: CREAR TAREA PRINCIPAL O AGREGAR SUBTAREA A ORDEN EXISTENTE -->
-  <div id="modalCarga" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden">
-      <div class="sheraton-navy text-white px-5 py-4 flex justify-between items-center">
-        <h3 class="font-bold text-sm">Carga de Operaciones · Mantenimiento Sheraton Pilar</h3>
-        <button onclick="cerrarModalCarga()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+  <!-- VISOR DE FOTOS A PANTALLA COMPLETA -->
+  <div id="modalFoto" onclick="cerrarModalFoto()" class="fixed inset-0 bg-slate-950/85 hidden items-center justify-center z-50 p-4 cursor-zoom-out">
+    <div class="max-w-3xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
+      <div class="sheraton-navy text-white px-4 py-3 flex justify-between items-center">
+        <span id="tituloModalFoto" class="font-bold text-sm">Registro Fotográfico de Mantenimiento</span>
+        <button onclick="cerrarModalFoto()" class="text-white hover:text-amber-300 text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 bg-slate-900 flex justify-center">
+        <img id="imgModalFoto" src="" alt="Foto adjunta" class="max-h-[75vh] object-contain rounded-lg" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Input oculto universal para subir foto a cualquier Tarea o Subtarea existente -->
+  <input id="inputFotoOculto" type="file" accept="image/*" class="hidden" onchange="procesarFotoDirecta(event)" />
+
+  <!-- MODAL DOBLE: CREAR TAREA PRINCIPAL O AGREGAR SUBTAREA -->
+  <div id="modalCarga" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden my-8">
+      <div class="sheraton-navy text-white px-6 py-4 flex justify-between items-center">
+        <h3 class="font-bold text-base">Carga Operativa (Supervisores y Operarios) · Sheraton Pilar</h3>
+        <button onclick="cerrarModalCarga()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
       </div>
 
-      <!-- Pestañas selectoras dentro del Modal -->
-      <div class="grid grid-cols-2 bg-slate-100 p-1.5 gap-1.5 border-b text-xs font-bold">
-        <button id="tabBtnTarea" type="button" onclick="cambiarTabModal('TAREA')" class="py-2 rounded-lg bg-white text-slate-900 shadow">
+      <!-- Pestañas selectoras -->
+      <div class="grid grid-cols-2 bg-slate-100 p-1.5 gap-2 border-b text-sm font-bold">
+        <button id="tabBtnTarea" type="button" onclick="cambiarTabModal('TAREA')" class="py-2.5 rounded-lg bg-white text-slate-900 shadow">
           <i class="fa-solid fa-clipboard-list mr-1 text-blue-700"></i> 1. Nueva Tarea Principal
         </button>
-        <button id="tabBtnSubtarea" type="button" onclick="cambiarTabModal('SUBTAREA')" class="py-2 rounded-lg text-slate-600 hover:text-slate-900">
+        <button id="tabBtnSubtarea" type="button" onclick="cambiarTabModal('SUBTAREA')" class="py-2.5 rounded-lg text-slate-600 hover:text-slate-900">
           <i class="fa-solid fa-list-check mr-1 text-emerald-600"></i> 2. Subtarea en Orden Existente
         </button>
       </div>
 
-      <!-- FORMULARIO A: NUEVA TAREA PRINCIPAL (+ SUBTAREAS OPCIONALES) -->
-      <form id="formNuevaTarea" onsubmit="guardarNuevaTarea(event)" class="p-5 space-y-3 text-xs">
-        <div class="grid grid-cols-2 gap-3">
+      <!-- FORMULARIO A: NUEVA TAREA PRINCIPAL -->
+      <form id="formNuevaTarea" onsubmit="guardarNuevaTarea(event)" class="p-6 space-y-4 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="font-semibold text-slate-600 block mb-1">Sector *</label>
-            <select id="nuevoSector" required onchange="actualizarUbicacionesModal()" class="w-full border rounded-lg px-3 py-2 bg-white"></select>
+            <label class="font-bold text-slate-700 block mb-1">Sector *</label>
+            <select id="nuevoSector" required onchange="actualizarUbicacionesModal()" class="w-full border rounded-lg px-3 py-2.5 bg-white"></select>
           </div>
           <div>
-            <label class="font-semibold text-slate-600 block mb-1">Ubicación Detalle *</label>
-            <select id="nuevaUbicacion" required class="w-full border rounded-lg px-3 py-2 bg-white"></select>
+            <label class="font-bold text-slate-700 block mb-1">Ubicación Detalle *</label>
+            <select id="nuevaUbicacion" required class="w-full border rounded-lg px-3 py-2.5 bg-white"></select>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="font-semibold text-slate-600 block mb-1">Categoría *</label>
-            <select id="nuevaCategoria" required class="w-full border rounded-lg px-3 py-2 bg-white"></select>
+            <label class="font-bold text-slate-700 block mb-1">Categoría Técnica *</label>
+            <select id="nuevaCategoria" required class="w-full border rounded-lg px-3 py-2.5 bg-white"></select>
           </div>
           <div>
-            <label class="font-semibold text-slate-600 block mb-1">Prioridad *</label>
-            <select id="nuevaPrioridad" required class="w-full border rounded-lg px-3 py-2 bg-white">
+            <label class="font-bold text-slate-700 block mb-1">Prioridad *</label>
+            <select id="nuevaPrioridad" required class="w-full border rounded-lg px-3 py-2.5 bg-white">
               <option value="Media">🟡 Media</option>
               <option value="Alta">🟠 Alta</option>
               <option value="Crítica">🔴 Crítica</option>
@@ -267,69 +277,63 @@
           </div>
         </div>
         <div>
-          <label class="font-semibold text-slate-600 block mb-1">Título del Trabajo Principal *</label>
-          <input id="nuevoTitulo" required type="text" placeholder="Ej: Mantenimiento integral aire acondicionado o pintura general" class="w-full border rounded-lg px-3 py-2" />
+          <label class="font-bold text-slate-700 block mb-1">Título o Descripción de la Tarea Principal *</label>
+          <input id="nuevoTitulo" required type="text" placeholder="Ej: Pérdida en cañería fría o mantenimiento preventivo de equipo" class="w-full border rounded-lg px-3 py-2.5" />
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="font-semibold text-slate-600 block mb-1">Supervisor Responsable *</label>
-            <select id="nuevoSupervisor" required class="w-full border rounded-lg px-3 py-2 bg-white"></select>
+            <label class="font-bold text-slate-700 block mb-1">Reportado / Supervisado por *</label>
+            <select id="nuevoSupervisor" required class="w-full border rounded-lg px-3 py-2.5 bg-white"></select>
           </div>
           <div>
-            <label class="font-semibold text-slate-600 block mb-1">Observaciones Generales</label>
-            <input id="nuevaObs" type="text" placeholder="Notas u horario sugerido" class="w-full border rounded-lg px-3 py-2" />
+            <label class="font-bold text-slate-700 block mb-1">Foto del Desperfecto / Trabajo (Opcional)</label>
+            <input id="nuevaFotoTarea" type="file" accept="image/*" class="w-full text-xs border rounded-lg p-2 bg-slate-50" />
           </div>
         </div>
-
-        <!-- Subtareas Iniciales Opcionales dentro de la misma carga -->
-        <div class="border-t pt-3">
-          <div class="flex justify-between items-center mb-2">
-            <label class="font-bold text-slate-700"><i class="fa-solid fa-layer-group mr-1 text-blue-600"></i>Subtareas Iniciales (Opcional)</label>
-            <button type="button" onclick="agregarFilaSubtareaModal()" class="text-[11px] font-semibold text-blue-700 hover:underline">
-              + Agregar paso inicial
-            </button>
-          </div>
-          <div id="contenedorSubtareasModal" class="space-y-2 max-h-36 overflow-y-auto"></div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Comentarios / Observaciones Generales</label>
+          <input id="nuevaObs" type="text" placeholder="Comentarios del operario o supervisor, repuestos necesarios, horarios..." class="w-full border rounded-lg px-3 py-2.5" />
         </div>
 
         <div class="pt-3 flex justify-end gap-2 border-t">
-          <button type="button" onclick="cerrarModalCarga()" class="px-4 py-2 rounded-lg border text-slate-600">Cancelar</button>
-          <button type="submit" class="px-4 py-2 rounded-lg sheraton-navy text-white font-semibold">Crear Orden de Trabajo</button>
+          <button type="button" onclick="cerrarModalCarga()" class="px-4 py-2.5 rounded-lg border text-slate-600 font-semibold">Cancelar</button>
+          <button type="submit" class="px-5 py-2.5 rounded-lg sheraton-navy text-white font-bold">Guardar Orden Principal</button>
         </div>
       </form>
 
-      <!-- FORMULARIO B: AGREGAR SUBTAREA SELECCIONANDO LA TAREA PRINCIPAL -->
-      <form id="formNuevaSubtarea" onsubmit="guardarSubtareaDesdeModal(event)" class="hidden p-5 space-y-4 text-xs">
+      <!-- FORMULARIO B: AGREGAR SUBTAREA SELECCIONANDO TAREA PRINCIPAL (Con Multi-Operario y Foto) -->
+      <form id="formNuevaSubtarea" onsubmit="guardarSubtareaDesdeModal(event)" class="hidden p-6 space-y-4 text-sm">
         <div>
-          <label class="font-semibold text-slate-600 block mb-1">Seleccionar Orden de Trabajo Principal *</label>
-          <select id="selectTareaPadreModal" required class="w-full border rounded-lg px-3 py-2 bg-white font-semibold text-slate-800"></select>
+          <label class="font-bold text-slate-700 block mb-1">Seleccionar Orden de Trabajo Principal *</label>
+          <select id="selectTareaPadreModal" required class="w-full border rounded-lg px-3 py-2.5 bg-white font-bold text-slate-800"></select>
         </div>
         <div>
-          <label class="font-semibold text-slate-600 block mb-1">Descripción de la Subtarea / Paso a realizar *</label>
-          <input id="inputDescSubModal" required type="text" placeholder="Ej: Cambiar filtro secador, medir consumo eléctrico..." class="w-full border rounded-lg px-3 py-2" />
+          <label class="font-bold text-slate-700 block mb-1">Descripción de la Subtarea / Acción realizada *</label>
+          <input id="inputDescSubModal" required type="text" placeholder="Ej: Cambio de rodamientos, limpieza de serpentina..." class="w-full border rounded-lg px-3 py-2.5" />
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Seleccionar 1 o más Operarios Asignados *</label>
+          <div id="checkOperariosModalSub" class="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 border rounded-xl bg-slate-50"></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="font-semibold text-slate-600 block mb-1">Operario Asignado *</label>
-            <select id="selectOperarioSubModal" required class="w-full border rounded-lg px-3 py-2 bg-white"></select>
+            <label class="font-bold text-slate-700 block mb-1">Comentarios Técnicos / Repuestos</label>
+            <input id="inputNotasSubModal" type="text" placeholder="Ej: Quedó probado, se usó sellador..." class="w-full border rounded-lg px-3 py-2.5" />
           </div>
           <div>
-            <label class="font-semibold text-slate-600 block mb-1">Notas Técnicas / Repuestos</label>
-            <input id="inputNotasSubModal" type="text" placeholder="Opcional" class="w-full border rounded-lg px-3 py-2" />
+            <label class="font-bold text-slate-700 block mb-1">Adjuntar Foto de la Subtarea</label>
+            <input id="nuevaFotoSubtarea" type="file" accept="image/*" class="w-full text-xs border rounded-lg p-2 bg-slate-50" />
           </div>
         </div>
         <div class="pt-3 flex justify-end gap-2 border-t">
-          <button type="button" onclick="cerrarModalCarga()" class="px-4 py-2 rounded-lg border text-slate-600">Cancelar</button>
-          <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">Guardar Subtarea</button>
+          <button type="button" onclick="cerrarModalCarga()" class="px-4 py-2.5 rounded-lg border text-slate-600 font-semibold">Cancelar</button>
+          <button type="submit" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold">Guardar Subtarea</button>
         </div>
       </form>
     </div>
   </div>
 
   <script>
-    // =========================================================================
-    // CONEXIÓN EN VIVO CON TU GOOGLE SHEETS
-    // =========================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwLMG80q2ANGsEITBfx-5KJ6kto9DKWPSLn0FCInBUKSMiIM6_s5EcNxB7zyi1uxFtwkg/exec";
 
     let estadoApp = {
@@ -340,6 +344,7 @@
       subtareas: [],
       config: {},
       ubicaciones: {},
+      targetFotoActual: null, // { tipo: 'TAREA' | 'SUBTAREA', id: '...' }
       filtrosCheck: {
         sectores: new Set(),
         ubicaciones: new Set(),
@@ -349,10 +354,36 @@
       }
     };
 
-    // Normalizador anti-"undefined": garantiza que toda fila tenga su ID_Tarea aunque la columna se llame distinto en Sheets
+    // Comprimir foto en el navegador para guardarla rápido en Google Sheets sin superar límites de celda
+    function comprimirImagenBase64(file, maxWidth = 650, quality = 0.65) {
+      return new Promise((resolve) => {
+        if (!file) { resolve(''); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width;
+            let h = img.height;
+            if (w > maxWidth) {
+              h = Math.round((h * maxWidth) / w);
+              w = maxWidth;
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     function normalizarTarea(raw, index) {
       const vals = Object.values(raw);
-      const id = raw.ID_Tarea || raw.id_tarea || raw['ID Tarea'] || vals[0] || ('T-' + String(index + 1).padStart(3, '0'));
+      const id = raw.ID_Tarea || raw.id_tarea || vals[0] || ('T-' + String(index + 1).padStart(3, '0'));
       return {
         ID_Tarea: String(id).trim(),
         Fecha_Creacion: raw.Fecha_Creacion || vals[1] || '',
@@ -364,7 +395,8 @@
         Supervisor: raw.Supervisor || vals[7] || '',
         Estado: raw.Estado || vals[8] || 'Pendiente',
         Fecha_Cierre: raw.Fecha_Cierre || vals[10] || '',
-        Observaciones: raw.Observaciones || vals[11] || ''
+        Observaciones: raw.Observaciones || vals[11] || '',
+        Foto: raw.Foto || vals[12] || ''
       };
     }
 
@@ -382,7 +414,8 @@
         Completada: completada,
         Estado_Subtarea: completada ? 'Completada' : (raw.Estado_Subtarea || vals[5] || 'Pendiente'),
         Fecha_Ejecucion: raw.Fecha_Ejecucion || vals[6] || '',
-        Notas_Tecnicas: raw.Notas_Tecnicas || vals[7] || ''
+        Notas_Tecnicas: raw.Notas_Tecnicas || vals[7] || '',
+        Foto: raw.Foto || vals[8] || ''
       };
     }
 
@@ -415,7 +448,6 @@
         estadoApp.config = data.config || {};
         estadoApp.ubicaciones = data.ubicaciones || {};
 
-        // Si es la primera carga, expandir automáticamente la primera tarea que tenga subtareas
         if (estadoApp.filasExpandidas.size === 0 && estadoApp.tareas.length > 0) {
           estadoApp.filasExpandidas.add(estadoApp.tareas[0].ID_Tarea);
         }
@@ -427,20 +459,25 @@
       } catch (e) {
         console.error(e);
         statusDot.className = "w-2.5 h-2.5 rounded-full bg-rose-400 inline-block";
-        statusText.textContent = "Error de conexión: verificá que la implementación en Apps Script tenga acceso para 'Cualquier persona'";
+        statusText.textContent = "Error de conexión: verificá actualizar la Nueva Versión en Apps Script";
       } finally {
         iconoSync.classList.remove('fa-spin');
       }
     }
 
-    // =========================================================================
-    // FILTROS MULTI-SELECCIÓN CON CHECKBOXES
-    // =========================================================================
+    function obtenerListaOperarios() {
+      const base = estadoApp.config.Operarios && estadoApp.config.Operarios.length > 0
+        ? estadoApp.config.Operarios
+        : ['Juan Pérez', 'Carlos López', 'Pedro Sánchez', 'Miguel Torres', 'Diego Romero'];
+      return [...new Set(base.filter(Boolean))];
+    }
+
     function toggleDropdown(id) {
       document.querySelectorAll('.dropdown-panel').forEach(el => {
         if (el.id !== id) el.classList.add('hidden');
       });
-      document.getElementById(id).classList.toggle('hidden');
+      const panel = document.getElementById(id);
+      if (panel) panel.classList.toggle('hidden');
     }
 
     function cerrarDropdownsAlClickAfuera(e) {
@@ -460,8 +497,8 @@
         const checked = setActivo.has(item) ? 'checked' : '';
         const safeItem = item.replace(/'/g, "\\'");
         return `
-          <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 cursor-pointer">
-            <input type="checkbox" ${checked} onchange="toggleValorFiltro('${grupoFiltro}', '${safeItem}', '${labelId}', '${textoDefault}')" class="w-3.5 h-3.5 accent-blue-700 rounded" />
+          <label class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-slate-100 cursor-pointer">
+            <input type="checkbox" ${checked} onchange="toggleValorFiltro('${grupoFiltro}', '${safeItem}', '${labelId}', '${textoDefault}')" class="w-4 h-4 accent-blue-700 rounded" />
             <span class="truncate text-slate-700 font-medium">${item}</span>
           </label>
         `;
@@ -473,10 +510,7 @@
       const setActivo = estadoApp.filtrosCheck[grupoFiltro];
       if (setActivo.has(valor)) setActivo.delete(valor);
       else setActivo.add(valor);
-
-      if (grupoFiltro === 'sectores') {
-        actualizarCheckboxesUbicacion();
-      }
+      if (grupoFiltro === 'sectores') actualizarCheckboxesUbicacion();
       actualizarTextoLabelFiltro(grupoFiltro, labelId, textoDefault);
       renderizar();
     }
@@ -517,27 +551,33 @@
 
       const estados = ['Pendiente', 'En Proceso', 'Esperando Repuesto', 'Completada'];
       const prioridades = ['Crítica', 'Alta', 'Media', 'Baja'];
-      const personas = [...new Set([
-        ...(estadoApp.config.Supervisores || []),
-        ...(estadoApp.config.Operarios || []),
-        ...estadoApp.tareas.map(t => t.Supervisor).filter(Boolean),
-        ...estadoApp.subtareas.map(s => s.Operario_Asignado).filter(Boolean)
-      ])];
+      const operarios = obtenerListaOperarios();
+      const supervisores = estadoApp.config.Supervisores || ['Martín Gómez', 'Laura Díaz'];
+
+      const todasLasPersonas = [...new Set([...supervisores, ...operarios])];
 
       renderizarOpcionesCheckbox('ddSector', sectores, 'sectores', 'labelSector', 'Todos los sectores');
       actualizarCheckboxesUbicacion();
       renderizarOpcionesCheckbox('ddEstado', estados, 'estados', 'labelEstado', 'Todos los estados');
       renderizarOpcionesCheckbox('ddPrioridad', prioridades, 'prioridades', 'labelPrioridad', 'Todas las prioridades');
-      renderizarOpcionesCheckbox('ddPersona', personas, 'personas', 'labelPersona', 'Todo el equipo');
+      renderizarOpcionesCheckbox('ddPersona', todasLasPersonas, 'personas', 'labelPersona', 'Todo el equipo');
 
-      // Poblar selectores del Modal
       document.getElementById('nuevoSector').innerHTML = sectores.map(s => `<option value="${s}">${s}</option>`).join('');
       const categorias = estadoApp.config.Categorias || ['Aire Acondicionado / Calefacción', 'Electricidad / Iluminación', 'Plomería / Sanitarios', 'Carpintería / Cerrajería', 'Equipamiento Gastronómico', 'Preventivo / Bombas'];
       document.getElementById('nuevaCategoria').innerHTML = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
-      const supervisores = estadoApp.config.Supervisores || ['Martín Gómez', 'Laura Díaz'];
-      document.getElementById('nuevoSupervisor').innerHTML = supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
-      const operarios = estadoApp.config.Operarios || ['Juan Pérez', 'Carlos López', 'Pedro Sánchez'];
-      document.getElementById('selectOperarioSubModal').innerHTML = operarios.map(o => `<option value="${o}">${o}</option>`).join('');
+
+      // Permitir que tanto Supervisores como Operarios carguen Tareas Principales
+      document.getElementById('nuevoSupervisor').innerHTML =
+        `<optgroup label="Supervisores">` + supervisores.map(s => `<option value="${s}">${s}</option>`).join('') + `</optgroup>` +
+        `<optgroup label="Operarios de Mantenimiento">` + operarios.map(o => `<option value="${o}">${o}</option>`).join('') + `</optgroup>`;
+
+      // Checkboxes multi-operario en el Modal de Subtarea
+      document.getElementById('checkOperariosModalSub').innerHTML = operarios.map((op, i) => `
+        <label class="flex items-center gap-2 text-sm cursor-pointer bg-white px-2.5 py-1.5 rounded-lg border">
+          <input type="checkbox" name="opModalSub" value="${op}" ${i === 0 ? 'checked' : ''} class="w-4 h-4 accent-emerald-600 rounded" />
+          <span class="font-medium text-slate-700">${op}</span>
+        </label>
+      `).join('');
 
       actualizarUbicacionesModal();
       actualizarSelectorTareasPadreModal();
@@ -579,14 +619,15 @@
         if (prioridades.size > 0 && !prioridades.has(t.Prioridad)) return false;
 
         if (personas.size > 0) {
-          const coincideSup = personas.has(t.Supervisor);
-          const coincideOp = subsDeTarea.some(s => personas.has(s.Operario_Asignado));
+          const personasElegidas = [...personas];
+          const coincideSup = personasElegidas.some(p => String(t.Supervisor).includes(p));
+          const coincideOp = subsDeTarea.some(s => personasElegidas.some(p => String(s.Operario_Asignado).includes(p)));
           if (!coincideSup && !coincideOp) return false;
         }
 
         if (txt) {
           const blob = `${t.ID_Tarea} ${t.Titulo} ${t.Sector} ${t.Ubicacion_Detalle} ${t.Categoria} ${t.Observaciones}`.toLowerCase();
-          const subBlob = subsDeTarea.map(s => s.Descripcion.toLowerCase()).join(' ');
+          const subBlob = subsDeTarea.map(s => `${s.Descripcion} ${s.Notas_Tecnicas} ${s.Operario_Asignado}`.toLowerCase()).join(' ');
           if (!blob.includes(txt) && !subBlob.includes(txt)) return false;
         }
         return true;
@@ -622,7 +663,7 @@
         'Media': 'bg-amber-100 text-amber-800 border-amber-300',
         'Baja': 'bg-emerald-100 text-emerald-800 border-emerald-300'
       };
-      return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${map[p] || 'bg-slate-100'}">${p}</span>`;
+      return `<span class="px-3 py-1 rounded-full text-xs font-bold border ${map[p] || 'bg-slate-100'}">${p}</span>`;
     }
 
     function renderizar() {
@@ -632,6 +673,7 @@
       const tbody = document.getElementById('cuerpoTabla');
       const cards = document.getElementById('contenedorTarjetas');
       const sinRes = document.getElementById('mensajeSinResultados');
+      const listaOperarios = obtenerListaOperarios();
 
       sinRes.classList.toggle('hidden', filtradas.length > 0);
       tbody.innerHTML = '';
@@ -646,28 +688,44 @@
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition";
         tr.innerHTML = `
-          <td class="py-3 px-3 text-center">
-            <button type="button" onclick="toggleExpandir('${idTarea}')" class="px-2.5 py-1 rounded-lg ${expandida ? 'bg-blue-700 text-white' : 'bg-slate-100 hover:bg-blue-100 text-slate-700'} font-bold text-xs flex items-center gap-1.5 mx-auto transition" title="Ver subtareas">
-              <i class="fa-solid ${expandida ? 'fa-chevron-down' : 'fa-chevron-right'} text-[10px]"></i>
+          <td class="py-4 px-3 text-center">
+            <button type="button" onclick="toggleExpandir('${idTarea}')" class="px-3 py-1.5 rounded-xl ${expandida ? 'bg-blue-700 text-white' : 'bg-slate-100 hover:bg-blue-100 text-slate-700'} font-bold text-sm flex items-center gap-1.5 mx-auto transition" title="Desplegar subtareas">
+              <i class="fa-solid ${expandida ? 'fa-chevron-down' : 'fa-chevron-right'} text-xs"></i>
               <span>${subs.length}</span>
             </button>
           </td>
-          <td class="py-3 px-3 cursor-pointer" onclick="toggleExpandir('${idTarea}')">
-            <div class="font-bold text-blue-900">${idTarea}</div>
-            <div class="text-[11px] text-slate-400">${t.Fecha_Creacion}</div>
+          <td class="py-4 px-3 cursor-pointer" onclick="toggleExpandir('${idTarea}')">
+            <div class="font-extrabold text-base text-blue-900">${idTarea}</div>
+            <div class="text-xs text-slate-500">${t.Fecha_Creacion}</div>
           </td>
-          <td class="py-3 px-3">
-            <div class="font-semibold text-slate-800">${t.Ubicacion_Detalle}</div>
-            <div class="text-[11px] text-slate-500">${t.Sector}</div>
+          <td class="py-4 px-3">
+            <div class="font-bold text-base text-slate-800">${t.Ubicacion_Detalle}</div>
+            <div class="text-xs font-medium text-slate-500">${t.Sector}</div>
           </td>
-          <td class="py-3 px-3 cursor-pointer" onclick="toggleExpandir('${idTarea}')">
-            <div class="font-semibold text-slate-900 hover:text-blue-700">${t.Titulo}</div>
-            <div class="text-[11px] text-slate-500">${t.Categoria} ${t.Observaciones ? '· <span class="text-amber-700 font-medium">' + t.Observaciones + '</span>' : ''}</div>
+          <td class="py-4 px-3">
+            <div class="font-bold text-base text-slate-900 cursor-pointer hover:text-blue-700" onclick="toggleExpandir('${idTarea}')">${t.Titulo}</div>
+            <div class="text-xs text-slate-500 mt-0.5">${t.Categoria}</div>
+            <!-- Comentario de Tarea Principal editable y botón de Foto -->
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <input type="text" value="${(t.Observaciones || '').replace(/"/g, '&quot;')}"
+                onchange="guardarObservacionTarea('${idTarea}', this.value)"
+                placeholder="💬 Agregar comentario general..."
+                class="text-xs bg-amber-50/70 border border-amber-200 rounded-lg px-2.5 py-1 text-slate-700 w-64 focus:outline-none focus:border-amber-500" />
+              ${t.Foto
+                ? `<button type="button" onclick="verFoto('${idTarea}', 'TAREA')" class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center gap-1 hover:bg-emerald-200">
+                     <i class="fa-solid fa-image"></i> Ver Foto
+                   </button>`
+                : ''
+              }
+              <button type="button" onclick="dispararSubidaFoto('TAREA', '${idTarea}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs flex items-center gap-1" title="Adjuntar o cambiar foto">
+                <i class="fa-solid fa-camera"></i> ${t.Foto ? 'Cambiar' : 'Adjuntar Foto'}
+              </button>
+            </div>
           </td>
-          <td class="py-3 px-3 text-center">${badgePrioridad(t.Prioridad)}</td>
-          <td class="py-3 px-3 font-medium text-slate-700">${t.Supervisor}</td>
-          <td class="py-3 px-3 text-center">
-            <select onchange="cambiarEstadoTarea('${idTarea}', this.value)" class="px-2 py-1 rounded-lg text-xs font-bold border ${
+          <td class="py-4 px-3 text-center">${badgePrioridad(t.Prioridad)}</td>
+          <td class="py-4 px-3 font-semibold text-sm text-slate-700">${t.Supervisor}</td>
+          <td class="py-4 px-3 text-center">
+            <select onchange="cambiarEstadoTarea('${idTarea}', this.value)" class="px-3 py-1.5 rounded-xl text-sm font-bold border ${
               t.Estado === 'Completada' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
               t.Estado === 'En Proceso' ? 'bg-blue-50 text-blue-800 border-blue-300' :
               t.Estado === 'Esperando Repuesto' ? 'bg-orange-50 text-orange-800 border-orange-300' :
@@ -679,56 +737,106 @@
               <option value="Completada" ${t.Estado === 'Completada' ? 'selected' : ''}>🟢 Completada</option>
             </select>
           </td>
-          <td class="py-3 px-3">
-            <div class="flex justify-between text-[11px] font-semibold mb-1">
+          <td class="py-4 px-3">
+            <div class="flex justify-between text-xs font-bold mb-1">
               <span>${prog.listas}/${prog.total} listas</span>
               <span class="${prog.pct === 100 ? 'text-emerald-600' : 'text-blue-600'}">${prog.pct}%</span>
             </div>
-            <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
               <div class="h-full ${prog.pct === 100 ? 'bg-emerald-500' : 'bg-blue-600'}" style="width: ${prog.pct}%"></div>
             </div>
           </td>
         `;
         tbody.appendChild(tr);
 
-        // FILA DESPLEGABLE DE SUBTAREAS
+        // FILA DESPLEGABLE DE SUBTAREAS (Con selector de 1 o 2+ operarios, comentarios en vivo y fotos)
         if (expandida) {
           const trSub = document.createElement('tr');
           trSub.className = "bg-slate-50";
           trSub.innerHTML = `
-            <td colspan="8" class="p-4 border-l-4 border-blue-800">
-              <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
-                <span class="text-xs font-bold uppercase text-slate-700">
-                  <i class="fa-solid fa-list-check mr-1 text-blue-700"></i>Subtareas de ${idTarea} · ${t.Ubicacion_Detalle}
+            <td colspan="8" class="p-5 border-l-4 border-blue-800">
+              <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
+                <span class="text-sm font-extrabold uppercase text-slate-700">
+                  <i class="fa-solid fa-list-check mr-1.5 text-blue-700"></i>Subtareas Operativas de ${idTarea} (${t.Ubicacion_Detalle})
                 </span>
-                <button type="button" onclick="abrirModalSubtareaDirecta('${idTarea}')" class="text-xs font-semibold text-blue-700 hover:underline">
-                  + Abrir cargador detallado de subtarea
+                <button type="button" onclick="abrirModalSubtareaDirecta('${idTarea}')" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">
+                  + Agregar Subtarea con Foto / Múltiples Operarios
                 </button>
               </div>
-              <div class="space-y-1.5 mb-3">
-                ${subs.length === 0 ? '<div class="text-xs text-slate-400 italic py-1">Esta orden aún no tiene subtareas desglosadas. Agregá la primera acá abajo:</div>' :
-                  subs.map(s => `
-                    <label class="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-blue-400 cursor-pointer transition">
-                      <div class="flex items-center gap-2.5">
-                        <input type="checkbox" ${s.Completada ? 'checked' : ''} onchange="toggleSubtarea('${s.ID_Subtarea}', this.checked)" class="w-4 h-4 accent-emerald-600 rounded cursor-pointer" />
-                        <span class="text-[11px] font-bold text-slate-400">${s.ID_Subtarea}</span>
-                        <span class="${s.Completada ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${s.Descripcion}</span>
+
+              <div class="space-y-2.5 mb-4">
+                ${subs.length === 0 ? '<div class="text-sm text-slate-400 italic py-2">No hay subtareas registradas todavía. Cargá la primera abajo:</div>' :
+                  subs.map(s => {
+                    const asignadosArr = String(s.Operario_Asignado || '').split(',').map(x => x.trim()).filter(Boolean);
+                    const ddId = `ddOpSub-${s.ID_Subtarea}`;
+                    return `
+                      <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                        <!-- Checkbox + Descripción -->
+                        <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-[240px]">
+                          <input type="checkbox" ${s.Completada ? 'checked' : ''} onchange="toggleSubtarea('${s.ID_Subtarea}', this.checked)" class="w-5 h-5 accent-emerald-600 rounded cursor-pointer" />
+                          <span class="text-xs font-extrabold text-slate-400">${s.ID_Subtarea}</span>
+                          <span class="text-base ${s.Completada ? 'line-through text-slate-400' : 'text-slate-900 font-semibold'}">${s.Descripcion}</span>
+                        </label>
+
+                        <!-- Controles de la Subtarea: Operarios (1 o 2+) + Comentario editable + Foto -->
+                        <div class="flex flex-wrap items-center gap-2">
+                          <!-- Selector Multi-Operario con Checkboxes -->
+                          <div class="relative dropdown-multi">
+                            <button type="button" onclick="toggleDropdown('${ddId}')" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-bold flex items-center gap-1.5" title="Clic para cambiar o asignar 2 operarios">
+                              <i class="fa-solid fa-user-gear text-blue-700"></i>
+                              <span>${asignadosArr.length > 0 ? asignadosArr.join(', ') : 'Asignar operario'}</span>
+                              <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </button>
+                            <div id="${ddId}" class="hidden absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 space-y-1 text-xs">
+                              <div class="font-bold text-slate-400 px-2 py-1 uppercase text-[10px]">Seleccionar 1 o más técnicos:</div>
+                              ${listaOperarios.map(op => {
+                                const estaAsignado = asignadosArr.includes(op);
+                                const safeOp = op.replace(/'/g, "\\'");
+                                return `
+                                  <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-100 cursor-pointer">
+                                    <input type="checkbox" ${estaAsignado ? 'checked' : ''} onchange="toggleOperarioEnSubtarea('${s.ID_Subtarea}', '${safeOp}', this.checked)" class="w-4 h-4 accent-blue-700 rounded" />
+                                    <span class="font-medium text-slate-700">${op}</span>
+                                  </label>
+                                `;
+                              }).join('')}
+                            </div>
+                          </div>
+
+                          <!-- Comentario técnico editable por el operario -->
+                          <input type="text" value="${(s.Notas_Tecnicas || '').replace(/"/g, '&quot;')}"
+                            onchange="guardarNotaSubtarea('${s.ID_Subtarea}', this.value)"
+                            placeholder="💬 Comentario / repuesto..."
+                            class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 w-52 focus:outline-none focus:border-blue-600" />
+
+                          <!-- Botones de Foto en Subtarea -->
+                          ${s.Foto
+                            ? `<button type="button" onclick="verFoto('${s.ID_Subtarea}', 'SUBTAREA')" class="px-2.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center gap-1 hover:bg-emerald-200">
+                                 <i class="fa-solid fa-image"></i> Foto
+                               </button>`
+                            : ''
+                          }
+                          <button type="button" onclick="dispararSubidaFoto('SUBTAREA', '${s.ID_Subtarea}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center gap-1" title="Subir foto de esta subtarea">
+                            <i class="fa-solid fa-camera"></i>
+                          </button>
+                        </div>
                       </div>
-                      <div class="flex items-center gap-2 text-[11px]">
-                        <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-medium"><i class="fa-regular fa-user mr-1"></i>${s.Operario_Asignado}</span>
-                        ${s.Notas_Tecnicas ? `<span class="text-slate-400 italic">(${s.Notas_Tecnicas})</span>` : ''}
-                      </div>
-                    </label>
-                  `).join('')
+                    `;
+                  }).join('')
                 }
               </div>
-              <!-- Carga rápida en línea -->
-              <div class="flex flex-wrap gap-2 items-center bg-white p-2 rounded-lg border border-slate-200">
-                <input id="inputSubDesc-${idTarea}" type="text" placeholder="Escribir nueva subtarea rápida para ${idTarea}..." class="flex-1 min-w-[200px] text-xs px-2.5 py-1.5 border rounded" />
-                <select id="inputSubOp-${idTarea}" class="text-xs px-2.5 py-1.5 border rounded bg-white">
-                  ${(estadoApp.config.Operarios || ['Juan Pérez', 'Carlos López', 'Pedro Sánchez']).map(op => `<option value="${op}">${op}</option>`).join('')}
+
+              <!-- Barra rápida para agregar subtarea con 1 o 2 operarios y comentario -->
+              <div class="flex flex-wrap gap-2 items-center bg-white p-3 rounded-xl border border-slate-200">
+                <input id="inputSubDesc-${idTarea}" type="text" placeholder="Nueva subtarea rápida para ${idTarea}..." class="flex-1 min-w-[200px] text-sm px-3 py-2 border rounded-lg" />
+                <input id="inputSubNota-${idTarea}" type="text" placeholder="Comentario (opcional)..." class="w-48 text-sm px-3 py-2 border rounded-lg" />
+                <select id="inputSubOp1-${idTarea}" class="text-sm px-2.5 py-2 border rounded-lg bg-white">
+                  ${listaOperarios.map(op => `<option value="${op}">${op}</option>`).join('')}
                 </select>
-                <button type="button" onclick="agregarSubtareaRapida('${idTarea}')" class="px-3 py-1.5 rounded bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold">
+                <select id="inputSubOp2-${idTarea}" class="text-sm px-2.5 py-2 border rounded-lg bg-white">
+                  <option value="">+ 2do Operario (Opcional)</option>
+                  ${listaOperarios.map(op => `<option value="${op}">${op}</option>`).join('')}
+                </select>
+                <button type="button" onclick="agregarSubtareaRapida('${idTarea}')" class="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-sm font-bold">
                   + Sumar Paso
                 </button>
               </div>
@@ -737,29 +845,30 @@
           tbody.appendChild(trSub);
         }
 
-        // TARJETAS
+        // TARJETAS (Vista Móvil / Kanban)
         const card = document.createElement('div');
-        card.className = "bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between space-y-3";
+        card.className = "bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between space-y-3";
         card.innerHTML = `
           <div>
             <div class="flex justify-between items-start gap-2">
-              <span class="text-xs font-bold text-blue-900">${idTarea} · ${t.Sector}</span>
+              <span class="text-sm font-extrabold text-blue-900">${idTarea} · ${t.Sector}</span>
               ${badgePrioridad(t.Prioridad)}
             </div>
-            <div class="mt-1 font-bold text-sm text-slate-900">${t.Ubicacion_Detalle} — ${t.Titulo}</div>
-            <p class="text-xs text-slate-500 mt-1">${t.Categoria} · Sup: ${t.Supervisor}</p>
-            <div class="mt-3 space-y-1">
+            <div class="mt-1 font-bold text-base text-slate-900">${t.Ubicacion_Detalle} — ${t.Titulo}</div>
+            <p class="text-xs text-slate-500 mt-1">${t.Categoria} · Creado/Sup: ${t.Supervisor}</p>
+            ${t.Observaciones ? `<p class="text-xs bg-amber-50 text-amber-900 p-2 rounded-lg mt-2">💬 ${t.Observaciones}</p>` : ''}
+            <div class="mt-3 space-y-2">
               ${subs.map(s => `
-                <label class="flex items-center gap-2 text-xs py-1 border-b border-slate-100 cursor-pointer">
-                  <input type="checkbox" ${s.Completada ? 'checked' : ''} onchange="toggleSubtarea('${s.ID_Subtarea}', this.checked)" class="accent-emerald-600" />
-                  <span class="${s.Completada ? 'line-through text-slate-400' : 'text-slate-700'} flex-1">${s.Descripcion}</span>
-                  <span class="text-[10px] text-slate-400">${s.Operario_Asignado}</span>
+                <label class="flex items-center gap-2.5 text-sm py-1.5 border-b border-slate-100 cursor-pointer">
+                  <input type="checkbox" ${s.Completada ? 'checked' : ''} onchange="toggleSubtarea('${s.ID_Subtarea}', this.checked)" class="w-4 h-4 accent-emerald-600" />
+                  <span class="${s.Completada ? 'line-through text-slate-400' : 'text-slate-800 font-medium'} flex-1">${s.Descripcion}</span>
+                  <span class="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">${s.Operario_Asignado}</span>
                 </label>
               `).join('')}
             </div>
           </div>
-          <div class="pt-2 border-t flex items-center justify-between text-xs">
-            <span class="font-semibold text-slate-600">Avance: ${prog.pct}% (${prog.listas}/${prog.total})</span>
+          <div class="pt-2 border-t flex items-center justify-between text-sm">
+            <span class="font-bold text-slate-600">Avance: ${prog.pct}% (${prog.listas}/${prog.total})</span>
             <span class="font-bold text-blue-700">${t.Estado}</span>
           </div>
         `;
@@ -775,11 +884,8 @@
     }
 
     function expandirContraerTodas() {
-      if (estadoApp.filasExpandidas.size > 0) {
-        estadoApp.filasExpandidas.clear();
-      } else {
-        estadoApp.tareas.forEach(t => estadoApp.filasExpandidas.add(String(t.ID_Tarea).trim()));
-      }
+      if (estadoApp.filasExpandidas.size > 0) estadoApp.filasExpandidas.clear();
+      else estadoApp.tareas.forEach(t => estadoApp.filasExpandidas.add(String(t.ID_Tarea).trim()));
       renderizar();
     }
 
@@ -793,6 +899,81 @@
       await enviarAccionAPI({ action: 'toggleSubtarea', id_subtarea: idSubtarea, completada });
     }
 
+    // Asignar o quitar 1, 2 o más operarios dentro de una subtarea
+    async function toggleOperarioEnSubtarea(idSubtarea, nombreOp, marcado) {
+      const sub = estadoApp.subtareas.find(s => String(s.ID_Subtarea).trim() === String(idSubtarea).trim());
+      if (!sub) return;
+      let actual = String(sub.Operario_Asignado || '').split(',').map(x => x.trim()).filter(Boolean);
+      if (marcado && !actual.includes(nombreOp)) actual.push(nombreOp);
+      if (!marcado) actual = actual.filter(x => x !== nombreOp);
+      sub.Operario_Asignado = actual.join(', ');
+      renderizar();
+      await enviarAccionAPI({ action: 'actualizarSubtareaDetalle', id_subtarea: idSubtarea, operario: sub.Operario_Asignado });
+    }
+
+    // Guardar comentario técnico en subtarea
+    async function guardarNotaSubtarea(idSubtarea, nuevaNota) {
+      const sub = estadoApp.subtareas.find(s => String(s.ID_Subtarea).trim() === String(idSubtarea).trim());
+      if (sub) sub.Notas_Tecnicas = nuevaNota;
+      await enviarAccionAPI({ action: 'actualizarSubtareaDetalle', id_subtarea: idSubtarea, notas: nuevaNota });
+    }
+
+    // Guardar observación general en tarea principal
+    async function guardarObservacionTarea(idTarea, nuevaObs) {
+      const tar = estadoApp.tareas.find(t => String(t.ID_Tarea).trim() === String(idTarea).trim());
+      if (tar) tar.Observaciones = nuevaObs;
+      await enviarAccionAPI({ action: 'actualizarObservacionTarea', id_tarea: idTarea, observaciones: nuevaObs });
+    }
+
+    // Subir foto a tarea o subtarea existente
+    function dispararSubidaFoto(tipo, id) {
+      estadoApp.targetFotoActual = { tipo, id };
+      const input = document.getElementById('inputFotoOculto');
+      input.value = '';
+      input.click();
+    }
+
+    async function procesarFotoDirecta(e) {
+      const file = e.target.files[0];
+      if (!file || !estadoApp.targetFotoActual) return;
+      const base64 = await comprimirImagenBase64(file);
+      const { tipo, id } = estadoApp.targetFotoActual;
+
+      if (tipo === 'TAREA') {
+        const tar = estadoApp.tareas.find(t => String(t.ID_Tarea).trim() === String(id).trim());
+        if (tar) tar.Foto = base64;
+        renderizar();
+        await enviarAccionAPI({ action: 'adjuntarFotoTarea', id_tarea: id, foto: base64 });
+      } else {
+        const sub = estadoApp.subtareas.find(s => String(s.ID_Subtarea).trim() === String(id).trim());
+        if (sub) sub.Foto = base64;
+        renderizar();
+        await enviarAccionAPI({ action: 'actualizarSubtareaDetalle', id_subtarea: id, foto: base64 });
+      }
+    }
+
+    function verFoto(id, tipo) {
+      let fotoUrl = '';
+      let titulo = '';
+      if (tipo === 'TAREA') {
+        const tar = estadoApp.tareas.find(t => String(t.ID_Tarea).trim() === String(id).trim());
+        if (tar) { fotoUrl = tar.Foto; titulo = `${tar.ID_Tarea} · ${tar.Ubicacion_Detalle} — ${tar.Titulo}`; }
+      } else {
+        const sub = estadoApp.subtareas.find(s => String(s.ID_Subtarea).trim() === String(id).trim());
+        if (sub) { fotoUrl = sub.Foto; titulo = `${sub.ID_Subtarea} · ${sub.Descripcion}`; }
+      }
+      if (!fotoUrl) return;
+      document.getElementById('tituloModalFoto').textContent = titulo;
+      document.getElementById('imgModalFoto').src = fotoUrl;
+      document.getElementById('modalFoto').classList.remove('hidden');
+      document.getElementById('modalFoto').classList.add('flex');
+    }
+
+    function cerrarModalFoto() {
+      document.getElementById('modalFoto').classList.add('hidden');
+      document.getElementById('modalFoto').classList.remove('flex');
+    }
+
     async function cambiarEstadoTarea(idTarea, nuevoEstado) {
       const tar = estadoApp.tareas.find(t => String(t.ID_Tarea).trim() === String(idTarea).trim());
       if (tar) tar.Estado = nuevoEstado;
@@ -802,21 +983,28 @@
 
     async function agregarSubtareaRapida(idTareaPadre) {
       const inputDesc = document.getElementById(`inputSubDesc-${idTareaPadre}`);
-      const selectOp = document.getElementById(`inputSubOp-${idTareaPadre}`);
+      const inputNota = document.getElementById(`inputSubNota-${idTareaPadre}`);
+      const op1 = document.getElementById(`inputSubOp1-${idTareaPadre}`).value;
+      const op2 = document.getElementById(`inputSubOp2-${idTareaPadre}`).value;
       const descripcion = inputDesc.value.trim();
+      const notas = inputNota.value.trim();
       if (!descripcion) return;
 
+      const operariosUnidos = op2 && op2 !== op1 ? `${op1}, ${op2}` : op1;
       const nuevoSubId = 'SUB-' + String(estadoApp.subtareas.length + 1).padStart(3, '0');
+
       estadoApp.subtareas.push({
         ID_Subtarea: nuevoSubId,
         ID_Tarea_Padre: idTareaPadre,
         Descripcion: descripcion,
-        Operario_Asignado: selectOp.value,
+        Operario_Asignado: operariosUnidos,
         Completada: false,
         Estado_Subtarea: 'Pendiente',
-        Notas_Tecnicas: ''
+        Notas_Tecnicas: notas,
+        Foto: ''
       });
       inputDesc.value = '';
+      inputNota.value = '';
       renderizar();
 
       await enviarAccionAPI({
@@ -824,13 +1012,11 @@
         id_subtarea: nuevoSubId,
         id_tarea_padre: idTareaPadre,
         descripcion,
-        operario: selectOp.value
+        operario: operariosUnidos,
+        notas
       });
     }
 
-    // =========================================================================
-    // MODAL DE CARGA DOBLE (TAREA PRINCIPAL / SUBTAREA EN ORDEN EXISTENTE)
-    // =========================================================================
     function abrirModalCarga(tabInicial = 'TAREA') {
       document.getElementById('modalCarga').classList.remove('hidden');
       document.getElementById('modalCarga').classList.add('flex');
@@ -851,58 +1037,20 @@
       const esTarea = tab === 'TAREA';
       document.getElementById('formNuevaTarea').classList.toggle('hidden', !esTarea);
       document.getElementById('formNuevaSubtarea').classList.toggle('hidden', esTarea);
-
-      document.getElementById('tabBtnTarea').className = esTarea
-        ? 'py-2 rounded-lg bg-white text-slate-900 shadow'
-        : 'py-2 rounded-lg text-slate-600 hover:text-slate-900';
-      document.getElementById('tabBtnSubtarea').className = !esTarea
-        ? 'py-2 rounded-lg bg-white text-slate-900 shadow'
-        : 'py-2 rounded-lg text-slate-600 hover:text-slate-900';
-    }
-
-    function agregarFilaSubtareaModal() {
-      const cont = document.getElementById('contenedorSubtareasModal');
-      const ops = (estadoApp.config.Operarios || ['Juan Pérez', 'Carlos López', 'Pedro Sánchez'])
-        .map(o => `<option value="${o}">${o}</option>`).join('');
-      const div = document.createElement('div');
-      div.className = "flex gap-2 items-center fila-sub-modal";
-      div.innerHTML = `
-        <input type="text" placeholder="Descripción del paso..." class="sub-desc flex-1 border rounded-lg px-2.5 py-1.5 text-xs" />
-        <select class="sub-op border rounded-lg px-2 py-1.5 text-xs bg-white">${ops}</select>
-        <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-700 px-1"><i class="fa-solid fa-trash"></i></button>
-      `;
-      cont.appendChild(div);
+      document.getElementById('tabBtnTarea').className = esTarea ? 'py-2.5 rounded-lg bg-white text-slate-900 shadow' : 'py-2.5 rounded-lg text-slate-600';
+      document.getElementById('tabBtnSubtarea').className = !esTarea ? 'py-2.5 rounded-lg bg-white text-slate-900 shadow' : 'py-2.5 rounded-lg text-slate-600';
     }
 
     async function guardarNuevaTarea(e) {
       e.preventDefault();
-      // Generar ID correlativo limpio
       const numerosExistentes = estadoApp.tareas
         .map(t => parseInt(String(t.ID_Tarea).replace(/\D/g, ''), 10))
         .filter(n => !isNaN(n));
       const proximoNum = numerosExistentes.length > 0 ? Math.max(...numerosExistentes) + 1 : 1;
       const nuevoId = 'T-' + String(proximoNum).padStart(3, '0');
 
-      // Recolectar subtareas iniciales opcionales cargadas en el modal
-      const filasSub = document.querySelectorAll('.fila-sub-modal');
-      const subtareasIniciales = [];
-      filasSub.forEach((fila, idx) => {
-        const desc = fila.querySelector('.sub-desc').value.trim();
-        const op = fila.querySelector('.sub-op').value;
-        if (desc) {
-          const nuevoSubId = 'SUB-' + String(estadoApp.subtareas.length + idx + 1).padStart(3, '0');
-          subtareasIniciales.push({ id_subtarea: nuevoSubId, descripcion: desc, operario: op });
-          estadoApp.subtareas.push({
-            ID_Subtarea: nuevoSubId,
-            ID_Tarea_Padre: nuevoId,
-            Descripcion: desc,
-            Operario_Asignado: op,
-            Completada: false,
-            Estado_Subtarea: 'Pendiente',
-            Notas_Tecnicas: ''
-          });
-        }
-      });
+      const fileFoto = document.getElementById('nuevaFotoTarea').files[0];
+      const fotoBase64 = await comprimirImagenBase64(fileFoto);
 
       const payload = {
         action: 'crearTarea',
@@ -914,7 +1062,7 @@
         titulo: document.getElementById('nuevoTitulo').value,
         supervisor: document.getElementById('nuevoSupervisor').value,
         observaciones: document.getElementById('nuevaObs').value,
-        subtareas_iniciales: subtareasIniciales
+        foto: fotoBase64
       };
 
       estadoApp.tareas.unshift({
@@ -927,11 +1075,11 @@
         Prioridad: payload.prioridad,
         Supervisor: payload.supervisor,
         Estado: 'Pendiente',
-        Observaciones: payload.observaciones
+        Observaciones: payload.observaciones,
+        Foto: fotoBase64
       });
 
       estadoApp.filasExpandidas.add(nuevoId);
-      document.getElementById('contenedorSubtareasModal').innerHTML = '';
       cerrarModalCarga();
       e.target.reset();
       actualizarUbicacionesModal();
@@ -944,9 +1092,12 @@
       e.preventDefault();
       const idPadre = document.getElementById('selectTareaPadreModal').value;
       const descripcion = document.getElementById('inputDescSubModal').value.trim();
-      const operario = document.getElementById('selectOperarioSubModal').value;
       const notas = document.getElementById('inputNotasSubModal').value.trim();
-      if (!idPadre || !descripcion) return;
+      const checksOp = [...document.querySelectorAll('input[name="opModalSub"]:checked')].map(c => c.value);
+      const operario = checksOp.length > 0 ? checksOp.join(', ') : 'Sin asignar';
+
+      const fileFoto = document.getElementById('nuevaFotoSubtarea').files[0];
+      const fotoBase64 = await comprimirImagenBase64(fileFoto);
 
       const nuevoSubId = 'SUB-' + String(estadoApp.subtareas.length + 1).padStart(3, '0');
       estadoApp.subtareas.push({
@@ -956,7 +1107,8 @@
         Operario_Asignado: operario,
         Completada: false,
         Estado_Subtarea: 'Pendiente',
-        Notas_Tecnicas: notas
+        Notas_Tecnicas: notas,
+        Foto: fotoBase64
       });
 
       estadoApp.filasExpandidas.add(idPadre);
@@ -970,15 +1122,16 @@
         id_tarea_padre: idPadre,
         descripcion,
         operario,
-        notas
+        notas,
+        foto: fotoBase64
       });
     }
 
     function setQuickFilter(modo) {
       estadoApp.quickFilter = modo;
-      document.getElementById('btnQuickAll').className = modo === 'ALL' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
-      document.getElementById('btnQuickPending').className = modo === 'PENDING' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500 text-slate-950' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
-      document.getElementById('btnQuickCritical').className = modo === 'CRITICAL' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-600 text-white' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
+      document.getElementById('btnQuickAll').className = modo === 'ALL' ? 'px-3.5 py-2 rounded-full text-sm font-semibold bg-slate-800 text-white' : 'px-3.5 py-2 rounded-full text-sm font-semibold bg-slate-100 text-slate-700';
+      document.getElementById('btnQuickPending').className = modo === 'PENDING' ? 'px-3.5 py-2 rounded-full text-sm font-semibold bg-amber-500 text-slate-950' : 'px-3.5 py-2 rounded-full text-sm font-semibold bg-slate-100 text-slate-700';
+      document.getElementById('btnQuickCritical').className = modo === 'CRITICAL' ? 'px-3.5 py-2 rounded-full text-sm font-semibold bg-rose-600 text-white' : 'px-3.5 py-2 rounded-full text-sm font-semibold bg-slate-100 text-slate-700';
       renderizar();
     }
 
@@ -993,8 +1146,8 @@
       estadoApp.vista = vista;
       document.getElementById('contenedorTabla').classList.toggle('hidden', vista !== 'TABLA');
       document.getElementById('contenedorTarjetas').classList.toggle('hidden', vista !== 'TARJETAS');
-      document.getElementById('btnVistaTabla').className = vista === 'TABLA' ? 'px-3 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3 py-1.5 rounded-md text-slate-600';
-      document.getElementById('btnVistaTarjetas').className = vista === 'TARJETAS' ? 'px-3 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3 py-1.5 rounded-md text-slate-600';
+      document.getElementById('btnVistaTabla').className = vista === 'TABLA' ? 'px-3.5 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3.5 py-1.5 rounded-md text-slate-600';
+      document.getElementById('btnVistaTarjetas').className = vista === 'TARJETAS' ? 'px-3.5 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3.5 py-1.5 rounded-md text-slate-600';
     }
 
     cargarDatos();
