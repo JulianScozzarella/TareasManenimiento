@@ -10,7 +10,6 @@
     body { background-color: #f1f5f9; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     .sheraton-navy { background-color: #1B365D; }
     .sheraton-gold { color: #C5A880; }
-    .subtask-row { transition: all 0.2s ease; }
   </style>
 </head>
 <body class="text-slate-800">
@@ -25,15 +24,15 @@
         <div>
           <h1 class="text-lg font-bold tracking-wide">SHERATON PILAR · INGENIERÍA Y MANTENIMIENTO</h1>
           <p class="text-xs text-slate-300 flex items-center gap-2">
-            <span id="statusDot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-            <span id="statusText">Tablero de Control Operativo y Seguimiento de Subtareas</span>
+            <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block animate-pulse"></span>
+            <span id="statusText">Conectando con Base Madre en Google Sheets...</span>
           </p>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
         <button onclick="cargarDatos()" class="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium flex items-center gap-2 transition">
-          <i class="fa-solid fa-rotate"></i> Sincronizar
+          <i id="iconoSync" class="fa-solid fa-rotate"></i> Sincronizar
         </button>
         <button onclick="abrirModalNuevaTarea()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs flex items-center gap-2 shadow transition">
           <i class="fa-solid fa-plus"></i> Nueva Orden de Trabajo
@@ -54,7 +53,7 @@
         </div>
       </div>
 
-      <div onclick="activarFiltroRapidoPendientes()" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-amber-500 cursor-pointer hover:bg-amber-50/40 transition" title="Clic para filtrar pendientes">
+      <div onclick="setQuickFilter('PENDING')" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-amber-500 cursor-pointer hover:bg-amber-50/40 transition" title="Clic para filtrar pendientes">
         <div class="text-xs font-semibold text-amber-700 uppercase">Activas / Pendientes</div>
         <div class="mt-2 flex items-baseline justify-between">
           <span id="kpiPendientes" class="text-2xl font-bold text-amber-600">0</span>
@@ -62,7 +61,7 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-rose-600">
+      <div onclick="setQuickFilter('CRITICAL')" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-rose-600 cursor-pointer hover:bg-rose-50/40 transition" title="Clic para ver críticas">
         <div class="text-xs font-semibold text-rose-700 uppercase">Prioridad Crítica</div>
         <div class="mt-2 flex items-baseline justify-between">
           <span id="kpiCriticas" class="text-2xl font-bold text-rose-600">0</span>
@@ -197,7 +196,7 @@
               <th class="py-3 px-3 w-44">Progreso Subtareas</th>
             </tr>
           </thead>
-          <tbody id=" cuerpoTabla" class="divide-y divide-slate-200 text-xs"></tbody>
+          <tbody id="cuerpoTabla" class="divide-y divide-slate-200 text-xs"></tbody>
         </table>
       </div>
       <div id="mensajeSinResultados" class="hidden py-12 text-center text-slate-400 text-sm">
@@ -267,9 +266,9 @@
 
   <script>
     // =========================================================================
-    // CONFIGURACIÓN: Pegá acá la URL "/exec" de tu Google Apps Script
+    // TU URL DE CONEXIÓN EN VIVO CON GOOGLE SHEETS
     // =========================================================================
-    const API_URL = ""; // Ej: "https://script.google.com/macros/s/AKfycb.../exec"
+    const API_URL = "https://script.google.com/macros/s/AKfycbwLMG80q2ANGsEITBfx-5KJ6kto9DKWPSLn0FCInBUKSMiIM6_s5EcNxB7zyi1uxFtwkg/exec";
 
     let estadoApp = {
       vista: 'TABLA',
@@ -281,23 +280,13 @@
       ubicaciones: {}
     };
 
-    // Datos iniciales del Sheraton Pilar (funcionan al instante y se actualizan cuando pegás API_URL)
-    const DATOS_INICIALES = {
+    // Respaldo inicial si la planilla está cargando o por permisos de red
+    const DATOS_RESPALDO = {
       tareas: [
-        { ID_Tarea: 'T-001', Fecha_Creacion: '2026-11-24', Sector: 'Habitaciones', Ubicacion_Detalle: 'Habitación 302', Categoria: 'Aire Acondicionado / Calefacción', Titulo: 'Reparación y mantenimiento integral de equipo HVAC', Prioridad: 'Alta', Supervisor: 'Martín Gómez', Estado: 'En Proceso', Fecha_Cierre: '', Observaciones: 'Huésped ingresa 15 hs' },
-        { ID_Tarea: 'T-002', Fecha_Creacion: '2026-11-25', Sector: 'Restaurantes', Ubicacion_Detalle: 'Las Vasijas', Categoria: 'Electricidad / Iluminación', Titulo: 'Reemplazo de dimers y circuitos de iluminación cálida en salón', Prioridad: 'Media', Supervisor: 'Martín Gómez', Estado: 'Pendiente', Fecha_Cierre: '', Observaciones: 'Realizar entre las 16 y 18 hs' },
-        { ID_Tarea: 'T-003', Fecha_Creacion: '2026-11-25', Sector: 'Restaurantes', Ubicacion_Detalle: 'Don Giovanni', Categoria: 'Equipamiento Gastronómico', Titulo: 'Calibración de horno convector y cambio de burlete cámara', Prioridad: 'Crítica', Supervisor: 'Laura Díaz', Estado: 'En Proceso', Fecha_Cierre: '', Observaciones: 'Prioridad servicio de cena' },
-        { ID_Tarea: 'T-004', Fecha_Creacion: '2026-11-23', Sector: 'Piscina / Spa', Ubicacion_Detalle: 'Piscina Climatizada (In)', Categoria: 'Preventivo / Bombas', Titulo: 'Puesta a punto semanal de bombas y caldera de piscina', Prioridad: 'Media', Supervisor: 'Laura Díaz', Estado: 'Completada', Fecha_Cierre: '2026-11-24', Observaciones: 'Parámetros OK' }
+        { ID_Tarea: 'T-001', Fecha_Creacion: '2026-11-24', Sector: 'Habitaciones', Ubicacion_Detalle: 'Suite 302', Categoria: 'Aire Acondicionado / Calefacción', Titulo: 'Reparación y mantenimiento integral de equipo HVAC', Prioridad: 'Alta', Supervisor: 'Martín Gómez', Estado: 'En Proceso', Fecha_Cierre: '', Observaciones: 'Huésped ingresa mañana a las 15 hs' }
       ],
       subtareas: [
-        { ID_Subtarea: 'SUB-001', ID_Tarea_Padre: 'T-001', Descripcion: 'Limpieza de filtros y revisión de bandeja de drenaje', Operario_Asignado: 'Juan Pérez', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-24', Notas_Tecnicas: 'Filtros lavados' },
-        { ID_Subtarea: 'SUB-002', ID_Tarea_Padre: 'T-001', Descripcion: 'Medición de presión de gas refrigerante', Operario_Asignado: 'Juan Pérez', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-24', Notas_Tecnicas: 'Presión normal' },
-        { ID_Subtarea: 'SUB-003', ID_Tarea_Padre: 'T-001', Descripcion: 'Reemplazo de termostato digital de pared', Operario_Asignado: 'Carlos López', Completada: false, Estado_Subtarea: 'En Proceso', Fecha_Ejecucion: '', Notas_Tecnicas: 'Retirando repuesto de pañol' },
-        { ID_Subtarea: 'SUB-004', ID_Tarea_Padre: 'T-002', Descripcion: 'Verificar térmica en tablero seccional de Las Vasijas', Operario_Asignado: 'Pedro Sánchez', Completada: false, Estado_Subtarea: 'Pendiente', Fecha_Ejecucion: '', Notas_Tecnicas: '' },
-        { ID_Subtarea: 'SUB-005', ID_Tarea_Padre: 'T-002', Descripcion: 'Cambiar 6 lámparas AR111 LED cálidas en sector central', Operario_Asignado: 'Pedro Sánchez', Completada: false, Estado_Subtarea: 'Pendiente', Fecha_Ejecucion: '', Notas_Tecnicas: '' },
-        { ID_Subtarea: 'SUB-006', ID_Tarea_Padre: 'T-003', Descripcion: 'Retirar burlete dañado y limpiar marco en Don Giovanni', Operario_Asignado: 'Juan Pérez', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-25', Notas_Tecnicas: 'Listo' },
-        { ID_Subtarea: 'SUB-007', ID_Tarea_Padre: 'T-003', Descripcion: 'Colocar burlete nuevo y medir corte de termostato a 3°C', Operario_Asignado: 'Miguel Torres', Completada: false, Estado_Subtarea: 'En Proceso', Fecha_Ejecucion: '', Notas_Tecnicas: 'En prueba' },
-        { ID_Subtarea: 'SUB-008', ID_Tarea_Padre: 'T-004', Descripcion: 'Retrolavado de filtros de arena e inspección de válvulas', Operario_Asignado: 'Carlos López', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-24', Notas_Tecnicas: 'OK' }
+        { ID_Subtarea: 'SUB-001', ID_Tarea_Padre: 'T-001', Descripcion: 'Limpieza de filtros y revisión de drenaje', Operario_Asignado: 'Juan Pérez', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-24', Notas_Tecnicas: 'Filtros lavados' }
       ],
       config: {
         Categorias: ['Aire Acondicionado / Calefacción', 'Electricidad / Iluminación', 'Plomería / Sanitarios', 'Carpintería / Cerrajería', 'Pintura / Albañilería', 'Equipamiento Gastronómico', 'Preventivo / Bombas'],
@@ -305,43 +294,56 @@
         Operarios: ['Juan Pérez', 'Carlos López', 'Pedro Sánchez', 'Miguel Torres', 'Diego Romero']
       },
       ubicaciones: {
-        'Habitaciones': ['Habitación 101', 'Habitación 102', 'Habitación 201', 'Habitación 214', 'Habitación 302', 'Suite Presidencial', 'Suite Gobernador'],
-        'Restaurantes': ['Lobby Bar', 'Las Vasijas', 'Don Giovanni', 'La Federala'],
-        'Cocinas / A&B': ['Cocina Principal', 'Cocina Don Giovanni', 'Cocina La Federala', 'Pastelería / Panadería', 'Cámara Frigorífica 1', 'Cámara Frigorífica 2'],
-        'Salones de Eventos': ['Salón Los Girasoles', 'Salón Los Ceibos', 'Salón Los Jazmines', 'Salón Pampa', 'Foyer de Eventos'],
-        'Piscina / Spa': ['Piscina Climatizada (In)', 'Piscina Exterior (Out)', 'Health Club & Spa', 'Gimnasio (Fitness Center)', 'Sauna / Hidromasaje'],
-        'Lobby / Áreas Públicas': ['Front Desk / Recepción', 'Lobby Principal', 'Baños Públicos Lobby', 'Ascensores Huéspedes'],
-        'Áreas Internas / Máquinas': ['Comedor de Personal', 'Vestuarios de Personal', 'Oficinas RRHH / Administración', 'Sala de Calderas / Bombas']
+        'Habitaciones': ['Habitación 101', 'Habitación 102', 'Habitación 201', 'Habitación 302', 'Suite Presidencial'],
+        'Restaurantes': ['Lobby Bar', 'Las Vasijas', 'Don Giovanni', 'La Federala']
       }
     };
 
+    async function enviarAccionAPI(payload) {
+      if (!API_URL) return;
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.error("Error al guardar en Google Sheets:", err);
+      }
+    }
+
     async function cargarDatos() {
       const statusText = document.getElementById('statusText');
-      if (!API_URL) {
-        estadoApp.tareas = DATOS_INICIALES.tareas;
-        estadoApp.subtareas = DATOS_INICIALES.subtareas;
-        estadoApp.config = DATOS_INICIALES.config;
-        estadoApp.ubicaciones = DATOS_INICIALES.ubicaciones;
-        statusText.textContent = "Modo Vista Previa (Pegá tu API_URL en el código para conectar en vivo con Google Sheets)";
-        inicializarSelectores();
-        renderizar();
-        return;
-      }
+      const statusDot = document.getElementById('statusDot');
+      const iconoSync = document.getElementById('iconoSync');
 
       try {
+        iconoSync.classList.add('fa-spin');
         statusText.textContent = "Sincronizando con Google Sheets...";
-        const res = await fetch(API_URL);
+        const res = await fetch(API_URL, { redirect: 'follow' });
         const data = await res.json();
+
         estadoApp.tareas = data.tareas || [];
         estadoApp.subtareas = data.subtareas || [];
-        estadoApp.config = data.config || DATOS_INICIALES.config;
-        estadoApp.ubicaciones = data.ubicaciones || DATOS_INICIALES.ubicaciones;
-        statusText.textContent = "Conectado en tiempo real con Base Madre Google Sheets";
+        estadoApp.config = (data.config && Object.keys(data.config).length) ? data.config : DATOS_RESPALDO.config;
+        estadoApp.ubicaciones = (data.ubicaciones && Object.keys(data.ubicaciones).length) ? data.ubicaciones : DATOS_RESPALDO.ubicaciones;
+
+        statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block";
+        statusText.textContent = "Conectado en vivo con Google Sheets · Última sincr.: " + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
         inicializarSelectores();
         renderizar();
       } catch (e) {
-        statusText.textContent = "Error al conectar con API_URL. Mostrando datos locales.";
         console.error(e);
+        estadoApp.tareas = DATOS_RESPALDO.tareas;
+        estadoApp.subtareas = DATOS_RESPALDO.subtareas;
+        estadoApp.config = DATOS_RESPALDO.config;
+        estadoApp.ubicaciones = DATOS_RESPALDO.ubicaciones;
+        statusDot.className = "w-2.5 h-2.5 rounded-full bg-rose-400 inline-block";
+        statusText.textContent = "Aviso de permisos: verificá que en Apps Script diga 'Quién tiene acceso: Cualquier persona'";
+        inicializarSelectores();
+        renderizar();
+      } finally {
+        iconoSync.classList.remove('fa-spin');
       }
     }
 
@@ -353,13 +355,11 @@
         sectores.map(s => `<option value="${s}">${s}</option>`).join('');
       selSector.value = valorActualSector;
 
-      // Personas (Supervisores + Operarios)
       const personas = [...new Set([...(estadoApp.config.Supervisores || []), ...(estadoApp.config.Operarios || [])])];
       const selPersona = document.getElementById('filtroPersona');
       selPersona.innerHTML = '<option value="">Todo el equipo</option>' +
         personas.map(p => `<option value="${p}">${p}</option>`).join('');
 
-      // Modal Nueva Tarea
       document.getElementById('nuevoSector').innerHTML = sectores.map(s => `<option value="${s}">${s}</option>`).join('');
       document.getElementById('nuevaCategoria').innerHTML = (estadoApp.config.Categorias || []).map(c => `<option value="${c}">${c}</option>`).join('');
       document.getElementById('nuevoSupervisor').innerHTML = (estadoApp.config.Supervisores || []).map(s => `<option value="${s}">${s}</option>`).join('');
@@ -472,7 +472,6 @@
         const expandida = estadoApp.filasExpandidas.has(t.ID_Tarea);
         const subs = estadoApp.subtareas.filter(s => s.ID_Tarea_Padre === t.ID_Tarea);
 
-        // 1. FILA PRINCIPAL EN LA TABLA
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition";
         tr.innerHTML = `
@@ -520,7 +519,6 @@
         `;
         tbody.appendChild(tr);
 
-        // 2. SUBTAREAS DESPLEGABLES DEBAJO DE LA FILA
         if (expandida) {
           const trSub = document.createElement('tr');
           trSub.className = "bg-slate-50/90";
@@ -545,7 +543,6 @@
                   `).join('')
                 }
               </div>
-              <!-- Formulario rápido para agregar subtarea -->
               <div class="flex flex-wrap gap-2 items-center bg-white p-2 rounded-lg border border-slate-200">
                 <input id="inputSubDesc-${t.ID_Tarea}" type="text" placeholder="Agregar nuevo paso o subtarea..." class="flex-1 min-w-[200px] text-xs px-2.5 py-1.5 border rounded" />
                 <select id="inputSubOp-${t.ID_Tarea}" class="text-xs px-2.5 py-1.5 border rounded bg-white">
@@ -560,7 +557,6 @@
           tbody.appendChild(trSub);
         }
 
-        // 3. TARJETA (PARA VISTA KANBAN / MÓVIL)
         const card = document.createElement('div');
         card.className = "bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between space-y-3";
         card.innerHTML = `
@@ -603,18 +599,14 @@
         sub.Estado_Subtarea = completada ? 'Completada' : 'Pendiente';
       }
       renderizar();
-      if (API_URL) {
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleSubtarea', id_subtarea: idSubtarea, completada }) });
-      }
+      await enviarAccionAPI({ action: 'toggleSubtarea', id_subtarea: idSubtarea, completada });
     }
 
     async function cambiarEstadoTarea(idTarea, nuevoEstado) {
       const tar = estadoApp.tareas.find(t => t.ID_Tarea === idTarea);
       if (tar) tar.Estado = nuevoEstado;
       renderizar();
-      if (API_URL) {
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'cambiarEstadoTarea', id_tarea: idTarea, estado: nuevoEstado }) });
-      }
+      await enviarAccionAPI({ action: 'cambiarEstadoTarea', id_tarea: idTarea, estado: nuevoEstado });
     }
 
     async function agregarSubtarea(idTareaPadre) {
@@ -636,9 +628,7 @@
       inputDesc.value = '';
       renderizar();
 
-      if (API_URL) {
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'crearSubtarea', id_tarea_padre: idTareaPadre, descripcion, operario: selectOp.value }) });
-      }
+      await enviarAccionAPI({ action: 'crearSubtarea', id_tarea_padre: idTareaPadre, descripcion, operario: selectOp.value });
     }
 
     function setQuickFilter(modo) {
@@ -647,10 +637,6 @@
       document.getElementById('btnQuickPending').className = modo === 'PENDING' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500 text-slate-950' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
       document.getElementById('btnQuickCritical').className = modo === 'CRITICAL' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-600 text-white' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
       renderizar();
-    }
-
-    function activarFiltroRapidoPendientes() {
-      setQuickFilter('PENDING');
     }
 
     function limpiarFiltros() {
@@ -712,13 +698,9 @@
       e.target.reset();
       renderizar();
 
-      if (API_URL) {
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-      }
+      await enviarAccionAPI(payload);
     }
 
-    // corregimos id de tbody si tuviera espacio
-    document.querySelector('tbody').id = 'cuerpoTabla';
     cargarDatos();
   </script>
 </body>
