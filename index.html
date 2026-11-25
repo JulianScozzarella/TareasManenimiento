@@ -10,9 +10,10 @@
     body { background-color: #f1f5f9; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     .sheraton-navy { background-color: #1B365D; }
     .sheraton-gold { color: #C5A880; }
+    .dropdown-panel { max-height: 240px; overflow-y: auto; }
   </style>
 </head>
-<body class="text-slate-800">
+<body class="text-slate-800" onclick="cerrarDropdownsAlClickAfuera(event)">
 
   <!-- BARRA SUPERIOR -->
   <header class="sheraton-navy text-white shadow-lg sticky top-0 z-30">
@@ -34,8 +35,8 @@
         <button onclick="cargarDatos()" class="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium flex items-center gap-2 transition">
           <i id="iconoSync" class="fa-solid fa-rotate"></i> Sincronizar
         </button>
-        <button onclick="abrirModalNuevaTarea()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs flex items-center gap-2 shadow transition">
-          <i class="fa-solid fa-plus"></i> Nueva Orden de Trabajo
+        <button onclick="abrirModalCarga('TAREA')" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs flex items-center gap-2 shadow transition">
+          <i class="fa-solid fa-plus"></i> Nueva Orden / Subtarea
         </button>
       </div>
     </div>
@@ -45,7 +46,7 @@
 
     <!-- SECCIÓN 1: KPIs E INDICADORES DE RESOLUCIÓN -->
     <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+      <div onclick="setQuickFilter('ALL')" class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
         <div class="text-xs font-semibold text-slate-400 uppercase">Total Órdenes</div>
         <div class="mt-2 flex items-baseline justify-between">
           <span id="kpiTotal" class="text-2xl font-bold text-slate-800">0</span>
@@ -53,15 +54,15 @@
         </div>
       </div>
 
-      <div onclick="setQuickFilter('PENDING')" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-amber-500 cursor-pointer hover:bg-amber-50/40 transition" title="Clic para filtrar pendientes">
+      <div onclick="setQuickFilter('PENDING')" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-amber-500 cursor-pointer hover:bg-amber-50/40 transition">
         <div class="text-xs font-semibold text-amber-700 uppercase">Activas / Pendientes</div>
         <div class="mt-2 flex items-baseline justify-between">
           <span id="kpiPendientes" class="text-2xl font-bold text-amber-600">0</span>
-          <span class="text-[11px] text-amber-600 font-medium underline">Ver pendientes</span>
+          <span class="text-[11px] text-amber-600 font-medium underline">Filtrar</span>
         </div>
       </div>
 
-      <div onclick="setQuickFilter('CRITICAL')" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-rose-600 cursor-pointer hover:bg-rose-50/40 transition" title="Clic para ver críticas">
+      <div onclick="setQuickFilter('CRITICAL')" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-rose-600 cursor-pointer hover:bg-rose-50/40 transition">
         <div class="text-xs font-semibold text-rose-700 uppercase">Prioridad Crítica</div>
         <div class="mt-2 flex items-baseline justify-between">
           <span id="kpiCriticas" class="text-2xl font-bold text-rose-600">0</span>
@@ -94,7 +95,7 @@
       </div>
     </section>
 
-    <!-- SECCIÓN 2: BARRA DE MÚLTIPLES FILTROS Y CONTROLES DE VISTA -->
+    <!-- SECCIÓN 2: BARRA DE MÚLTIPLES FILTROS CON CHECKBOXES -->
     <section class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 space-y-4">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
         <div class="flex flex-wrap items-center gap-2">
@@ -108,6 +109,9 @@
           <button id="btnQuickCritical" onclick="setQuickFilter('CRITICAL')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-rose-100 hover:text-rose-800 transition">
             🚨 Urgencias Críticas
           </button>
+          <button onclick="expandirContraerTodas()" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition">
+            <i class="fa-solid fa-list-check mr-1"></i> Desplegar / Contraer Subtareas
+          </button>
         </div>
 
         <div class="flex items-center gap-2">
@@ -119,63 +123,71 @@
               <i class="fa-solid fa-grip mr-1"></i> Tarjetas
             </button>
           </div>
-          <button onclick="limpiarFiltros()" class="text-xs text-slate-500 hover:text-rose-600 px-2 py-1">
-            <i class="fa-solid fa-filter-circle-xmark mr-1"></i>Limpiar
+          <button onclick="limpiarFiltros()" class="text-xs font-semibold text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition">
+            <i class="fa-solid fa-filter-circle-xmark mr-1"></i>Limpiar Filtros
           </button>
         </div>
       </div>
 
-      <!-- Filtros combinables -->
+      <!-- Filtros Multi-Selección con Checkboxes -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <!-- Buscador de texto -->
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Buscar palabra o Habitación</label>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Buscar palabra o ID</label>
           <div class="relative">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-            <input id="filtroTexto" oninput="renderizar()" type="text" placeholder="Ej: Suite 302, Las Vasijas..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600" />
+            <input id="filtroTexto" oninput="renderizar()" type="text" placeholder="Ej: T-001, Las Vasijas..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600" />
           </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Sector del Hotel</label>
-          <select id="filtroSector" onchange="actualizarFiltroUbicacion(); renderizar();" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
-            <option value="">Todos los sectores</option>
-          </select>
+        <!-- Dropdown Checkbox: Sector -->
+        <div class="relative dropdown-multi">
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Sector (Multi-opción)</label>
+          <button type="button" onclick="toggleDropdown('ddSector')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+            <span id="labelSector" class="truncate">Todos los sectores</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+          </button>
+          <div id="ddSector" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
         </div>
 
-        <div>
+        <!-- Dropdown Checkbox: Ubicación -->
+        <div class="relative dropdown-multi">
           <label class="block text-[11px] font-semibold text-slate-500 mb-1">Ubicación Detalle</label>
-          <select id="filtroUbicacion" onchange="renderizar()" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
-            <option value="">Todas las ubicaciones</option>
-          </select>
+          <button type="button" onclick="toggleDropdown('ddUbicacion')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+            <span id="labelUbicacion" class="truncate">Todas las ubicaciones</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+          </button>
+          <div id="ddUbicacion" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Estado de Orden</label>
-          <select id="filtroEstado" onchange="renderizar()" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
-            <option value="">Todos los estados</option>
-            <option value="Pendiente">⚪ Pendiente</option>
-            <option value="En Proceso">🔵 En Proceso</option>
-            <option value="Esperando Repuesto">🟠 Esperando Repuesto</option>
-            <option value="Completada">🟢 Completada</option>
-          </select>
+        <!-- Dropdown Checkbox: Estado -->
+        <div class="relative dropdown-multi">
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Estado (Multi-opción)</label>
+          <button type="button" onclick="toggleDropdown('ddEstado')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+            <span id="labelEstado" class="truncate">Todos los estados</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+          </button>
+          <div id="ddEstado" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Prioridad</label>
-          <select id="filtroPrioridad" onchange="renderizar()" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
-            <option value="">Todas las prioridades</option>
-            <option value="Crítica">🔴 Crítica</option>
-            <option value="Alta">🟠 Alta</option>
-            <option value="Media">🟡 Media</option>
-            <option value="Baja">🟢 Baja</option>
-          </select>
+        <!-- Dropdown Checkbox: Prioridad -->
+        <div class="relative dropdown-multi">
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Prioridad (Multi-opción)</label>
+          <button type="button" onclick="toggleDropdown('ddPrioridad')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+            <span id="labelPrioridad" class="truncate">Todas las prioridades</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+          </button>
+          <div id="ddPrioridad" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
         </div>
 
-        <div>
+        <!-- Dropdown Checkbox: Personal -->
+        <div class="relative dropdown-multi">
           <label class="block text-[11px] font-semibold text-slate-500 mb-1">Supervisor / Operario</label>
-          <select id="filtroPersona" onchange="renderizar()" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
-            <option value="">Todo el equipo</option>
-          </select>
+          <button type="button" onclick="toggleDropdown('ddPersona')" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white flex justify-between items-center text-left">
+            <span id="labelPersona" class="truncate">Todo el equipo</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+          </button>
+          <div id="ddPersona" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 p-2 dropdown-panel space-y-1 text-xs"></div>
         </div>
       </div>
     </section>
@@ -186,7 +198,7 @@
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="sheraton-navy text-white text-[11px] uppercase tracking-wider">
-              <th class="py-3 px-3 w-10 text-center">Sub</th>
+              <th class="py-3 px-3 w-16 text-center">Subtareas</th>
               <th class="py-3 px-3">ID / Fecha</th>
               <th class="py-3 px-3">Sector y Ubicación</th>
               <th class="py-3 px-3">Tarea Principal / Categoría</th>
@@ -209,32 +221,44 @@
 
   </main>
 
-  <!-- MODAL NUEVA ORDEN DE TRABAJO -->
-  <div id="modalNuevaTarea" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
+  <!-- MODAL DOBLE: CREAR TAREA PRINCIPAL O AGREGAR SUBTAREA A ORDEN EXISTENTE -->
+  <div id="modalCarga" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden">
       <div class="sheraton-navy text-white px-5 py-4 flex justify-between items-center">
-        <h3 class="font-bold text-sm">Nueva Orden de Trabajo - Mantenimiento</h3>
-        <button onclick="cerrarModalNuevaTarea()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        <h3 class="font-bold text-sm">Carga de Operaciones · Mantenimiento Sheraton Pilar</h3>
+        <button onclick="cerrarModalCarga()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-      <form onsubmit="guardarNuevaTarea(event)" class="p-5 space-y-3 text-xs">
+
+      <!-- Pestañas selectoras dentro del Modal -->
+      <div class="grid grid-cols-2 bg-slate-100 p-1.5 gap-1.5 border-b text-xs font-bold">
+        <button id="tabBtnTarea" type="button" onclick="cambiarTabModal('TAREA')" class="py-2 rounded-lg bg-white text-slate-900 shadow">
+          <i class="fa-solid fa-clipboard-list mr-1 text-blue-700"></i> 1. Nueva Tarea Principal
+        </button>
+        <button id="tabBtnSubtarea" type="button" onclick="cambiarTabModal('SUBTAREA')" class="py-2 rounded-lg text-slate-600 hover:text-slate-900">
+          <i class="fa-solid fa-list-check mr-1 text-emerald-600"></i> 2. Subtarea en Orden Existente
+        </button>
+      </div>
+
+      <!-- FORMULARIO A: NUEVA TAREA PRINCIPAL (+ SUBTAREAS OPCIONALES) -->
+      <form id="formNuevaTarea" onsubmit="guardarNuevaTarea(event)" class="p-5 space-y-3 text-xs">
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="font-semibold text-slate-600 block mb-1">Sector *</label>
-            <select id="nuevoSector" required onchange="actualizarUbicacionesModal()" class="w-full border rounded-lg px-3 py-2"></select>
+            <select id="nuevoSector" required onchange="actualizarUbicacionesModal()" class="w-full border rounded-lg px-3 py-2 bg-white"></select>
           </div>
           <div>
             <label class="font-semibold text-slate-600 block mb-1">Ubicación Detalle *</label>
-            <select id="nuevaUbicacion" required class="w-full border rounded-lg px-3 py-2"></select>
+            <select id="nuevaUbicacion" required class="w-full border rounded-lg px-3 py-2 bg-white"></select>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="font-semibold text-slate-600 block mb-1">Categoría *</label>
-            <select id="nuevaCategoria" required class="w-full border rounded-lg px-3 py-2"></select>
+            <select id="nuevaCategoria" required class="w-full border rounded-lg px-3 py-2 bg-white"></select>
           </div>
           <div>
             <label class="font-semibold text-slate-600 block mb-1">Prioridad *</label>
-            <select id="nuevaPrioridad" required class="w-full border rounded-lg px-3 py-2">
+            <select id="nuevaPrioridad" required class="w-full border rounded-lg px-3 py-2 bg-white">
               <option value="Media">🟡 Media</option>
               <option value="Alta">🟠 Alta</option>
               <option value="Crítica">🔴 Crítica</option>
@@ -243,22 +267,60 @@
           </div>
         </div>
         <div>
-          <label class="font-semibold text-slate-600 block mb-1">Título del Trabajo *</label>
-          <input id="nuevoTitulo" required type="text" placeholder="Ej: Revisión de equipo frío o cambio de luminaria" class="w-full border rounded-lg px-3 py-2" />
+          <label class="font-semibold text-slate-600 block mb-1">Título del Trabajo Principal *</label>
+          <input id="nuevoTitulo" required type="text" placeholder="Ej: Mantenimiento integral aire acondicionado o pintura general" class="w-full border rounded-lg px-3 py-2" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="font-semibold text-slate-600 block mb-1">Supervisor Responsable *</label>
-            <select id="nuevoSupervisor" required class="w-full border rounded-lg px-3 py-2"></select>
+            <select id="nuevoSupervisor" required class="w-full border rounded-lg px-3 py-2 bg-white"></select>
           </div>
           <div>
-            <label class="font-semibold text-slate-600 block mb-1">Observaciones</label>
+            <label class="font-semibold text-slate-600 block mb-1">Observaciones Generales</label>
             <input id="nuevaObs" type="text" placeholder="Notas u horario sugerido" class="w-full border rounded-lg px-3 py-2" />
           </div>
         </div>
+
+        <!-- Subtareas Iniciales Opcionales dentro de la misma carga -->
+        <div class="border-t pt-3">
+          <div class="flex justify-between items-center mb-2">
+            <label class="font-bold text-slate-700"><i class="fa-solid fa-layer-group mr-1 text-blue-600"></i>Subtareas Iniciales (Opcional)</label>
+            <button type="button" onclick="agregarFilaSubtareaModal()" class="text-[11px] font-semibold text-blue-700 hover:underline">
+              + Agregar paso inicial
+            </button>
+          </div>
+          <div id="contenedorSubtareasModal" class="space-y-2 max-h-36 overflow-y-auto"></div>
+        </div>
+
         <div class="pt-3 flex justify-end gap-2 border-t">
-          <button type="button" onclick="cerrarModalNuevaTarea()" class="px-4 py-2 rounded-lg border text-slate-600">Cancelar</button>
-          <button type="submit" class="px-4 py-2 rounded-lg sheraton-navy text-white font-semibold">Guardar Orden</button>
+          <button type="button" onclick="cerrarModalCarga()" class="px-4 py-2 rounded-lg border text-slate-600">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-lg sheraton-navy text-white font-semibold">Crear Orden de Trabajo</button>
+        </div>
+      </form>
+
+      <!-- FORMULARIO B: AGREGAR SUBTAREA SELECCIONANDO LA TAREA PRINCIPAL -->
+      <form id="formNuevaSubtarea" onsubmit="guardarSubtareaDesdeModal(event)" class="hidden p-5 space-y-4 text-xs">
+        <div>
+          <label class="font-semibold text-slate-600 block mb-1">Seleccionar Orden de Trabajo Principal *</label>
+          <select id="selectTareaPadreModal" required class="w-full border rounded-lg px-3 py-2 bg-white font-semibold text-slate-800"></select>
+        </div>
+        <div>
+          <label class="font-semibold text-slate-600 block mb-1">Descripción de la Subtarea / Paso a realizar *</label>
+          <input id="inputDescSubModal" required type="text" placeholder="Ej: Cambiar filtro secador, medir consumo eléctrico..." class="w-full border rounded-lg px-3 py-2" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-600 block mb-1">Operario Asignado *</label>
+            <select id="selectOperarioSubModal" required class="w-full border rounded-lg px-3 py-2 bg-white"></select>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600 block mb-1">Notas Técnicas / Repuestos</label>
+            <input id="inputNotasSubModal" type="text" placeholder="Opcional" class="w-full border rounded-lg px-3 py-2" />
+          </div>
+        </div>
+        <div class="pt-3 flex justify-end gap-2 border-t">
+          <button type="button" onclick="cerrarModalCarga()" class="px-4 py-2 rounded-lg border text-slate-600">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">Guardar Subtarea</button>
         </div>
       </form>
     </div>
@@ -266,38 +328,63 @@
 
   <script>
     // =========================================================================
-    // TU URL DE CONEXIÓN EN VIVO CON GOOGLE SHEETS
+    // CONEXIÓN EN VIVO CON TU GOOGLE SHEETS
     // =========================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwLMG80q2ANGsEITBfx-5KJ6kto9DKWPSLn0FCInBUKSMiIM6_s5EcNxB7zyi1uxFtwkg/exec";
 
     let estadoApp = {
       vista: 'TABLA',
       quickFilter: 'ALL',
-      filasExpandidas: new Set(['T-001']),
+      filasExpandidas: new Set(),
       tareas: [],
       subtareas: [],
       config: {},
-      ubicaciones: {}
-    };
-
-    // Respaldo inicial si la planilla está cargando o por permisos de red
-    const DATOS_RESPALDO = {
-      tareas: [
-        { ID_Tarea: 'T-001', Fecha_Creacion: '2026-11-24', Sector: 'Habitaciones', Ubicacion_Detalle: 'Suite 302', Categoria: 'Aire Acondicionado / Calefacción', Titulo: 'Reparación y mantenimiento integral de equipo HVAC', Prioridad: 'Alta', Supervisor: 'Martín Gómez', Estado: 'En Proceso', Fecha_Cierre: '', Observaciones: 'Huésped ingresa mañana a las 15 hs' }
-      ],
-      subtareas: [
-        { ID_Subtarea: 'SUB-001', ID_Tarea_Padre: 'T-001', Descripcion: 'Limpieza de filtros y revisión de drenaje', Operario_Asignado: 'Juan Pérez', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-24', Notas_Tecnicas: 'Filtros lavados' }
-      ],
-      config: {
-        Categorias: ['Aire Acondicionado / Calefacción', 'Electricidad / Iluminación', 'Plomería / Sanitarios', 'Carpintería / Cerrajería', 'Pintura / Albañilería', 'Equipamiento Gastronómico', 'Preventivo / Bombas'],
-        Supervisores: ['Martín Gómez', 'Laura Díaz', 'Roberto Fernández', 'Guardia Turno Noche'],
-        Operarios: ['Juan Pérez', 'Carlos López', 'Pedro Sánchez', 'Miguel Torres', 'Diego Romero']
-      },
-      ubicaciones: {
-        'Habitaciones': ['Habitación 101', 'Habitación 102', 'Habitación 201', 'Habitación 302', 'Suite Presidencial'],
-        'Restaurantes': ['Lobby Bar', 'Las Vasijas', 'Don Giovanni', 'La Federala']
+      ubicaciones: {},
+      filtrosCheck: {
+        sectores: new Set(),
+        ubicaciones: new Set(),
+        estados: new Set(),
+        prioridades: new Set(),
+        personas: new Set()
       }
     };
+
+    // Normalizador anti-"undefined": garantiza que toda fila tenga su ID_Tarea aunque la columna se llame distinto en Sheets
+    function normalizarTarea(raw, index) {
+      const vals = Object.values(raw);
+      const id = raw.ID_Tarea || raw.id_tarea || raw['ID Tarea'] || vals[0] || ('T-' + String(index + 1).padStart(3, '0'));
+      return {
+        ID_Tarea: String(id).trim(),
+        Fecha_Creacion: raw.Fecha_Creacion || vals[1] || '',
+        Sector: raw.Sector || vals[2] || '',
+        Ubicacion_Detalle: raw.Ubicacion_Detalle || vals[3] || '',
+        Categoria: raw.Categoria || vals[4] || '',
+        Titulo: raw.Titulo || vals[5] || 'Sin título',
+        Prioridad: raw.Prioridad || vals[6] || 'Media',
+        Supervisor: raw.Supervisor || vals[7] || '',
+        Estado: raw.Estado || vals[8] || 'Pendiente',
+        Fecha_Cierre: raw.Fecha_Cierre || vals[10] || '',
+        Observaciones: raw.Observaciones || vals[11] || ''
+      };
+    }
+
+    function normalizarSubtarea(raw, index) {
+      const vals = Object.values(raw);
+      const idSub = raw.ID_Subtarea || vals[0] || ('SUB-' + String(index + 1).padStart(3, '0'));
+      const idPadre = raw.ID_Tarea_Padre || vals[1] || '';
+      const compRaw = raw.Completada !== undefined ? raw.Completada : vals[4];
+      const completada = compRaw === true || String(compRaw).toUpperCase() === 'TRUE' || String(raw.Estado_Subtarea || vals[5]) === 'Completada';
+      return {
+        ID_Subtarea: String(idSub).trim(),
+        ID_Tarea_Padre: String(idPadre).trim(),
+        Descripcion: raw.Descripcion || vals[2] || '',
+        Operario_Asignado: raw.Operario_Asignado || vals[3] || '',
+        Completada: completada,
+        Estado_Subtarea: completada ? 'Completada' : (raw.Estado_Subtarea || vals[5] || 'Pendiente'),
+        Fecha_Ejecucion: raw.Fecha_Ejecucion || vals[6] || '',
+        Notas_Tecnicas: raw.Notas_Tecnicas || vals[7] || ''
+      };
+    }
 
     async function enviarAccionAPI(payload) {
       if (!API_URL) return;
@@ -323,98 +410,180 @@
         const res = await fetch(API_URL, { redirect: 'follow' });
         const data = await res.json();
 
-        estadoApp.tareas = data.tareas || [];
-        estadoApp.subtareas = data.subtareas || [];
-        estadoApp.config = (data.config && Object.keys(data.config).length) ? data.config : DATOS_RESPALDO.config;
-        estadoApp.ubicaciones = (data.ubicaciones && Object.keys(data.ubicaciones).length) ? data.ubicaciones : DATOS_RESPALDO.ubicaciones;
+        estadoApp.tareas = (data.tareas || []).map((t, i) => normalizarTarea(t, i)).filter(t => t.ID_Tarea);
+        estadoApp.subtareas = (data.subtareas || []).map((s, i) => normalizarSubtarea(s, i)).filter(s => s.Descripcion);
+        estadoApp.config = data.config || {};
+        estadoApp.ubicaciones = data.ubicaciones || {};
+
+        // Si es la primera carga, expandir automáticamente la primera tarea que tenga subtareas
+        if (estadoApp.filasExpandidas.size === 0 && estadoApp.tareas.length > 0) {
+          estadoApp.filasExpandidas.add(estadoApp.tareas[0].ID_Tarea);
+        }
 
         statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block";
-        statusText.textContent = "Conectado en vivo con Google Sheets · Última sincr.: " + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-        inicializarSelectores();
+        statusText.textContent = "Conectado en vivo con Google Sheets · Actualizado " + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        inicializarSelectoresYCheckboxes();
         renderizar();
       } catch (e) {
         console.error(e);
-        estadoApp.tareas = DATOS_RESPALDO.tareas;
-        estadoApp.subtareas = DATOS_RESPALDO.subtareas;
-        estadoApp.config = DATOS_RESPALDO.config;
-        estadoApp.ubicaciones = DATOS_RESPALDO.ubicaciones;
         statusDot.className = "w-2.5 h-2.5 rounded-full bg-rose-400 inline-block";
-        statusText.textContent = "Aviso de permisos: verificá que en Apps Script diga 'Quién tiene acceso: Cualquier persona'";
-        inicializarSelectores();
-        renderizar();
+        statusText.textContent = "Error de conexión: verificá que la implementación en Apps Script tenga acceso para 'Cualquier persona'";
       } finally {
         iconoSync.classList.remove('fa-spin');
       }
     }
 
-    function inicializarSelectores() {
-      const sectores = Object.keys(estadoApp.ubicaciones);
-      const selSector = document.getElementById('filtroSector');
-      const valorActualSector = selSector.value;
-      selSector.innerHTML = '<option value="">Todos los sectores</option>' +
-        sectores.map(s => `<option value="${s}">${s}</option>`).join('');
-      selSector.value = valorActualSector;
-
-      const personas = [...new Set([...(estadoApp.config.Supervisores || []), ...(estadoApp.config.Operarios || [])])];
-      const selPersona = document.getElementById('filtroPersona');
-      selPersona.innerHTML = '<option value="">Todo el equipo</option>' +
-        personas.map(p => `<option value="${p}">${p}</option>`).join('');
-
-      document.getElementById('nuevoSector').innerHTML = sectores.map(s => `<option value="${s}">${s}</option>`).join('');
-      document.getElementById('nuevaCategoria').innerHTML = (estadoApp.config.Categorias || []).map(c => `<option value="${c}">${c}</option>`).join('');
-      document.getElementById('nuevoSupervisor').innerHTML = (estadoApp.config.Supervisores || []).map(s => `<option value="${s}">${s}</option>`).join('');
-      actualizarUbicacionesModal();
-      actualizarFiltroUbicacion();
+    // =========================================================================
+    // FILTROS MULTI-SELECCIÓN CON CHECKBOXES
+    // =========================================================================
+    function toggleDropdown(id) {
+      document.querySelectorAll('.dropdown-panel').forEach(el => {
+        if (el.id !== id) el.classList.add('hidden');
+      });
+      document.getElementById(id).classList.toggle('hidden');
     }
 
-    function actualizarFiltroUbicacion() {
-      const sector = document.getElementById('filtroSector').value;
-      const selUbi = document.getElementById('filtroUbicacion');
-      let lista = [];
-      if (sector && estadoApp.ubicaciones[sector]) {
-        lista = estadoApp.ubicaciones[sector];
-      } else {
-        Object.values(estadoApp.ubicaciones).forEach(arr => lista.push(...arr));
+    function cerrarDropdownsAlClickAfuera(e) {
+      if (!e.target.closest('.dropdown-multi')) {
+        document.querySelectorAll('.dropdown-panel').forEach(el => el.classList.add('hidden'));
       }
-      selUbi.innerHTML = '<option value="">Todas las ubicaciones</option>' +
-        lista.map(u => `<option value="${u}">${u}</option>`).join('');
+    }
+
+    function renderizarOpcionesCheckbox(containerId, items, grupoFiltro, labelId, textoDefault) {
+      const container = document.getElementById(containerId);
+      const setActivo = estadoApp.filtrosCheck[grupoFiltro];
+      if (!items || items.length === 0) {
+        container.innerHTML = `<div class="text-slate-400 p-2 italic">Sin opciones</div>`;
+        return;
+      }
+      container.innerHTML = items.map(item => {
+        const checked = setActivo.has(item) ? 'checked' : '';
+        const safeItem = item.replace(/'/g, "\\'");
+        return `
+          <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 cursor-pointer">
+            <input type="checkbox" ${checked} onchange="toggleValorFiltro('${grupoFiltro}', '${safeItem}', '${labelId}', '${textoDefault}')" class="w-3.5 h-3.5 accent-blue-700 rounded" />
+            <span class="truncate text-slate-700 font-medium">${item}</span>
+          </label>
+        `;
+      }).join('');
+      actualizarTextoLabelFiltro(grupoFiltro, labelId, textoDefault);
+    }
+
+    function toggleValorFiltro(grupoFiltro, valor, labelId, textoDefault) {
+      const setActivo = estadoApp.filtrosCheck[grupoFiltro];
+      if (setActivo.has(valor)) setActivo.delete(valor);
+      else setActivo.add(valor);
+
+      if (grupoFiltro === 'sectores') {
+        actualizarCheckboxesUbicacion();
+      }
+      actualizarTextoLabelFiltro(grupoFiltro, labelId, textoDefault);
+      renderizar();
+    }
+
+    function actualizarTextoLabelFiltro(grupoFiltro, labelId, textoDefault) {
+      const setActivo = estadoApp.filtrosCheck[grupoFiltro];
+      const label = document.getElementById(labelId);
+      if (setActivo.size === 0) {
+        label.textContent = textoDefault;
+        label.className = "truncate text-slate-600";
+      } else if (setActivo.size === 1) {
+        label.textContent = [...setActivo][0];
+        label.className = "truncate font-bold text-blue-700";
+      } else {
+        label.textContent = `${setActivo.size} seleccionados`;
+        label.className = "truncate font-bold text-blue-700";
+      }
+    }
+
+    function actualizarCheckboxesUbicacion() {
+      const sectoresElegidos = [...estadoApp.filtrosCheck.sectores];
+      let listaUbicaciones = [];
+      if (sectoresElegidos.length > 0) {
+        sectoresElegidos.forEach(sec => {
+          if (estadoApp.ubicaciones[sec]) listaUbicaciones.push(...estadoApp.ubicaciones[sec]);
+        });
+      } else {
+        Object.values(estadoApp.ubicaciones).forEach(arr => listaUbicaciones.push(...arr));
+      }
+      listaUbicaciones = [...new Set(listaUbicaciones)];
+      renderizarOpcionesCheckbox('ddUbicacion', listaUbicaciones, 'ubicaciones', 'labelUbicacion', 'Todas las ubicaciones');
+    }
+
+    function inicializarSelectoresYCheckboxes() {
+      const sectores = Object.keys(estadoApp.ubicaciones).length > 0
+        ? Object.keys(estadoApp.ubicaciones)
+        : [...new Set(estadoApp.tareas.map(t => t.Sector).filter(Boolean))];
+
+      const estados = ['Pendiente', 'En Proceso', 'Esperando Repuesto', 'Completada'];
+      const prioridades = ['Crítica', 'Alta', 'Media', 'Baja'];
+      const personas = [...new Set([
+        ...(estadoApp.config.Supervisores || []),
+        ...(estadoApp.config.Operarios || []),
+        ...estadoApp.tareas.map(t => t.Supervisor).filter(Boolean),
+        ...estadoApp.subtareas.map(s => s.Operario_Asignado).filter(Boolean)
+      ])];
+
+      renderizarOpcionesCheckbox('ddSector', sectores, 'sectores', 'labelSector', 'Todos los sectores');
+      actualizarCheckboxesUbicacion();
+      renderizarOpcionesCheckbox('ddEstado', estados, 'estados', 'labelEstado', 'Todos los estados');
+      renderizarOpcionesCheckbox('ddPrioridad', prioridades, 'prioridades', 'labelPrioridad', 'Todas las prioridades');
+      renderizarOpcionesCheckbox('ddPersona', personas, 'personas', 'labelPersona', 'Todo el equipo');
+
+      // Poblar selectores del Modal
+      document.getElementById('nuevoSector').innerHTML = sectores.map(s => `<option value="${s}">${s}</option>`).join('');
+      const categorias = estadoApp.config.Categorias || ['Aire Acondicionado / Calefacción', 'Electricidad / Iluminación', 'Plomería / Sanitarios', 'Carpintería / Cerrajería', 'Equipamiento Gastronómico', 'Preventivo / Bombas'];
+      document.getElementById('nuevaCategoria').innerHTML = categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+      const supervisores = estadoApp.config.Supervisores || ['Martín Gómez', 'Laura Díaz'];
+      document.getElementById('nuevoSupervisor').innerHTML = supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
+      const operarios = estadoApp.config.Operarios || ['Juan Pérez', 'Carlos López', 'Pedro Sánchez'];
+      document.getElementById('selectOperarioSubModal').innerHTML = operarios.map(o => `<option value="${o}">${o}</option>`).join('');
+
+      actualizarUbicacionesModal();
+      actualizarSelectorTareasPadreModal();
     }
 
     function actualizarUbicacionesModal() {
       const sector = document.getElementById('nuevoSector').value;
-      const lista = estadoApp.ubicaciones[sector] || [];
+      const lista = estadoApp.ubicaciones[sector] || ['General'];
       document.getElementById('nuevaUbicacion').innerHTML = lista.map(u => `<option value="${u}">${u}</option>`).join('');
     }
 
+    function actualizarSelectorTareasPadreModal() {
+      const sel = document.getElementById('selectTareaPadreModal');
+      sel.innerHTML = estadoApp.tareas.map(t =>
+        `<option value="${t.ID_Tarea}">${t.ID_Tarea} · [${t.Ubicacion_Detalle}] ${t.Titulo}</option>`
+      ).join('');
+    }
+
     function calcularProgresoTarea(idTarea) {
-      const subs = estadoApp.subtareas.filter(s => s.ID_Tarea_Padre === idTarea);
+      const subs = estadoApp.subtareas.filter(s => String(s.ID_Tarea_Padre).trim() === String(idTarea).trim());
       if (subs.length === 0) return { total: 0, listas: 0, pct: 0 };
-      const listas = subs.filter(s => s.Completada === true || String(s.Completada).toUpperCase() === 'TRUE').length;
+      const listas = subs.filter(s => s.Completada === true).length;
       return { total: subs.length, listas, pct: Math.round((listas / subs.length) * 100) };
     }
 
     function obtenerTareasFiltradas() {
       const txt = document.getElementById('filtroTexto').value.toLowerCase().trim();
-      const sec = document.getElementById('filtroSector').value;
-      const ubi = document.getElementById('filtroUbicacion').value;
-      const est = document.getElementById('filtroEstado').value;
-      const pri = document.getElementById('filtroPrioridad').value;
-      const per = document.getElementById('filtroPersona').value;
+      const { sectores, ubicaciones, estados, prioridades, personas } = estadoApp.filtrosCheck;
 
       return estadoApp.tareas.filter(t => {
-        const subsDeTarea = estadoApp.subtareas.filter(s => s.ID_Tarea_Padre === t.ID_Tarea);
+        const subsDeTarea = estadoApp.subtareas.filter(s => String(s.ID_Tarea_Padre).trim() === String(t.ID_Tarea).trim());
+
         if (estadoApp.quickFilter === 'PENDING' && t.Estado === 'Completada') return false;
         if (estadoApp.quickFilter === 'CRITICAL' && (t.Prioridad !== 'Crítica' || t.Estado === 'Completada')) return false;
 
-        if (sec && t.Sector !== sec) return false;
-        if (ubi && t.Ubicacion_Detalle !== ubi) return false;
-        if (est && t.Estado !== est) return false;
-        if (pri && t.Prioridad !== pri) return false;
-        if (per) {
-          const coincideSup = t.Supervisor === per;
-          const coincideOp = subsDeTarea.some(s => s.Operario_Asignado === per);
+        if (sectores.size > 0 && !sectores.has(t.Sector)) return false;
+        if (ubicaciones.size > 0 && !ubicaciones.has(t.Ubicacion_Detalle)) return false;
+        if (estados.size > 0 && !estados.has(t.Estado)) return false;
+        if (prioridades.size > 0 && !prioridades.has(t.Prioridad)) return false;
+
+        if (personas.size > 0) {
+          const coincideSup = personas.has(t.Supervisor);
+          const coincideOp = subsDeTarea.some(s => personas.has(s.Operario_Asignado));
           if (!coincideSup && !coincideOp) return false;
         }
+
         if (txt) {
           const blob = `${t.ID_Tarea} ${t.Titulo} ${t.Sector} ${t.Ubicacion_Detalle} ${t.Categoria} ${t.Observaciones}`.toLowerCase();
           const subBlob = subsDeTarea.map(s => s.Descripcion.toLowerCase()).join(' ');
@@ -433,7 +602,7 @@
       const tasa = total > 0 ? Math.round((cerradas / total) * 100) : 0;
 
       const totalSub = estadoApp.subtareas.length;
-      const subListas = estadoApp.subtareas.filter(s => s.Completada === true || String(s.Completada).toUpperCase() === 'TRUE').length;
+      const subListas = estadoApp.subtareas.filter(s => s.Completada === true).length;
       const subPct = totalSub > 0 ? Math.round((subListas / totalSub) * 100) : 0;
 
       document.getElementById('kpiTotal').textContent = total;
@@ -458,6 +627,7 @@
 
     function renderizar() {
       actualizarKPIs();
+      actualizarSelectorTareasPadreModal();
       const filtradas = obtenerTareasFiltradas();
       const tbody = document.getElementById('cuerpoTabla');
       const cards = document.getElementById('contenedorTarjetas');
@@ -468,34 +638,36 @@
       cards.innerHTML = '';
 
       filtradas.forEach(t => {
-        const prog = calcularProgresoTarea(t.ID_Tarea);
-        const expandida = estadoApp.filasExpandidas.has(t.ID_Tarea);
-        const subs = estadoApp.subtareas.filter(s => s.ID_Tarea_Padre === t.ID_Tarea);
+        const idTarea = String(t.ID_Tarea).trim();
+        const prog = calcularProgresoTarea(idTarea);
+        const expandida = estadoApp.filasExpandidas.has(idTarea);
+        const subs = estadoApp.subtareas.filter(s => String(s.ID_Tarea_Padre).trim() === idTarea);
 
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition";
         tr.innerHTML = `
           <td class="py-3 px-3 text-center">
-            <button onclick="toggleExpandir('${t.ID_Tarea}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">
-              <i class="fa-solid ${expandida ? 'fa-chevron-down' : 'fa-chevron-right'}"></i>
+            <button type="button" onclick="toggleExpandir('${idTarea}')" class="px-2.5 py-1 rounded-lg ${expandida ? 'bg-blue-700 text-white' : 'bg-slate-100 hover:bg-blue-100 text-slate-700'} font-bold text-xs flex items-center gap-1.5 mx-auto transition" title="Ver subtareas">
+              <i class="fa-solid ${expandida ? 'fa-chevron-down' : 'fa-chevron-right'} text-[10px]"></i>
+              <span>${subs.length}</span>
             </button>
           </td>
-          <td class="py-3 px-3">
-            <div class="font-bold text-slate-900">${t.ID_Tarea}</div>
+          <td class="py-3 px-3 cursor-pointer" onclick="toggleExpandir('${idTarea}')">
+            <div class="font-bold text-blue-900">${idTarea}</div>
             <div class="text-[11px] text-slate-400">${t.Fecha_Creacion}</div>
           </td>
           <td class="py-3 px-3">
             <div class="font-semibold text-slate-800">${t.Ubicacion_Detalle}</div>
             <div class="text-[11px] text-slate-500">${t.Sector}</div>
           </td>
-          <td class="py-3 px-3">
-            <div class="font-semibold text-slate-900">${t.Titulo}</div>
+          <td class="py-3 px-3 cursor-pointer" onclick="toggleExpandir('${idTarea}')">
+            <div class="font-semibold text-slate-900 hover:text-blue-700">${t.Titulo}</div>
             <div class="text-[11px] text-slate-500">${t.Categoria} ${t.Observaciones ? '· <span class="text-amber-700 font-medium">' + t.Observaciones + '</span>' : ''}</div>
           </td>
           <td class="py-3 px-3 text-center">${badgePrioridad(t.Prioridad)}</td>
           <td class="py-3 px-3 font-medium text-slate-700">${t.Supervisor}</td>
           <td class="py-3 px-3 text-center">
-            <select onchange="cambiarEstadoTarea('${t.ID_Tarea}', this.value)" class="px-2 py-1 rounded-lg text-xs font-bold border ${
+            <select onchange="cambiarEstadoTarea('${idTarea}', this.value)" class="px-2 py-1 rounded-lg text-xs font-bold border ${
               t.Estado === 'Completada' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
               t.Estado === 'En Proceso' ? 'bg-blue-50 text-blue-800 border-blue-300' :
               t.Estado === 'Esperando Repuesto' ? 'bg-orange-50 text-orange-800 border-orange-300' :
@@ -509,7 +681,7 @@
           </td>
           <td class="py-3 px-3">
             <div class="flex justify-between text-[11px] font-semibold mb-1">
-              <span>${prog.listas}/${prog.total} pasos</span>
+              <span>${prog.listas}/${prog.total} listas</span>
               <span class="${prog.pct === 100 ? 'text-emerald-600' : 'text-blue-600'}">${prog.pct}%</span>
             </div>
             <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -519,37 +691,45 @@
         `;
         tbody.appendChild(tr);
 
+        // FILA DESPLEGABLE DE SUBTAREAS
         if (expandida) {
           const trSub = document.createElement('tr');
-          trSub.className = "bg-slate-50/90";
+          trSub.className = "bg-slate-50";
           trSub.innerHTML = `
             <td colspan="8" class="p-4 border-l-4 border-blue-800">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold uppercase text-slate-600"><i class="fa-solid fa-list-check mr-1 text-blue-700"></i>Subtareas Operativas de ${t.ID_Tarea} (${t.Ubicacion_Detalle})</span>
+              <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
+                <span class="text-xs font-bold uppercase text-slate-700">
+                  <i class="fa-solid fa-list-check mr-1 text-blue-700"></i>Subtareas de ${idTarea} · ${t.Ubicacion_Detalle}
+                </span>
+                <button type="button" onclick="abrirModalSubtareaDirecta('${idTarea}')" class="text-xs font-semibold text-blue-700 hover:underline">
+                  + Abrir cargador detallado de subtarea
+                </button>
               </div>
               <div class="space-y-1.5 mb-3">
-                ${subs.length === 0 ? '<div class="text-xs text-slate-400 italic">No hay subtareas cargadas todavía.</div>' :
+                ${subs.length === 0 ? '<div class="text-xs text-slate-400 italic py-1">Esta orden aún no tiene subtareas desglosadas. Agregá la primera acá abajo:</div>' :
                   subs.map(s => `
-                    <label class="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-blue-400 cursor-pointer">
+                    <label class="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-blue-400 cursor-pointer transition">
                       <div class="flex items-center gap-2.5">
                         <input type="checkbox" ${s.Completada ? 'checked' : ''} onchange="toggleSubtarea('${s.ID_Subtarea}', this.checked)" class="w-4 h-4 accent-emerald-600 rounded cursor-pointer" />
+                        <span class="text-[11px] font-bold text-slate-400">${s.ID_Subtarea}</span>
                         <span class="${s.Completada ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${s.Descripcion}</span>
                       </div>
-                      <div class="flex items-center gap-3 text-[11px]">
-                        <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-600 font-medium"><i class="fa-regular fa-user mr-1"></i>${s.Operario_Asignado}</span>
-                        <span class="text-slate-400">${s.Notas_Tecnicas || ''}</span>
+                      <div class="flex items-center gap-2 text-[11px]">
+                        <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-medium"><i class="fa-regular fa-user mr-1"></i>${s.Operario_Asignado}</span>
+                        ${s.Notas_Tecnicas ? `<span class="text-slate-400 italic">(${s.Notas_Tecnicas})</span>` : ''}
                       </div>
                     </label>
                   `).join('')
                 }
               </div>
+              <!-- Carga rápida en línea -->
               <div class="flex flex-wrap gap-2 items-center bg-white p-2 rounded-lg border border-slate-200">
-                <input id="inputSubDesc-${t.ID_Tarea}" type="text" placeholder="Agregar nuevo paso o subtarea..." class="flex-1 min-w-[200px] text-xs px-2.5 py-1.5 border rounded" />
-                <select id="inputSubOp-${t.ID_Tarea}" class="text-xs px-2.5 py-1.5 border rounded bg-white">
-                  ${(estadoApp.config.Operarios || []).map(op => `<option value="${op}">${op}</option>`).join('')}
+                <input id="inputSubDesc-${idTarea}" type="text" placeholder="Escribir nueva subtarea rápida para ${idTarea}..." class="flex-1 min-w-[200px] text-xs px-2.5 py-1.5 border rounded" />
+                <select id="inputSubOp-${idTarea}" class="text-xs px-2.5 py-1.5 border rounded bg-white">
+                  ${(estadoApp.config.Operarios || ['Juan Pérez', 'Carlos López', 'Pedro Sánchez']).map(op => `<option value="${op}">${op}</option>`).join('')}
                 </select>
-                <button onclick="agregarSubtarea('${t.ID_Tarea}')" class="px-3 py-1.5 rounded bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold">
-                  + Sumar Subtarea
+                <button type="button" onclick="agregarSubtareaRapida('${idTarea}')" class="px-3 py-1.5 rounded bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold">
+                  + Sumar Paso
                 </button>
               </div>
             </td>
@@ -557,19 +737,20 @@
           tbody.appendChild(trSub);
         }
 
+        // TARJETAS
         const card = document.createElement('div');
         card.className = "bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between space-y-3";
         card.innerHTML = `
           <div>
             <div class="flex justify-between items-start gap-2">
-              <span class="text-xs font-bold text-slate-400">${t.ID_Tarea} · ${t.Sector}</span>
+              <span class="text-xs font-bold text-blue-900">${idTarea} · ${t.Sector}</span>
               ${badgePrioridad(t.Prioridad)}
             </div>
             <div class="mt-1 font-bold text-sm text-slate-900">${t.Ubicacion_Detalle} — ${t.Titulo}</div>
             <p class="text-xs text-slate-500 mt-1">${t.Categoria} · Sup: ${t.Supervisor}</p>
             <div class="mt-3 space-y-1">
               ${subs.map(s => `
-                <label class="flex items-center gap-2 text-xs py-1 border-b border-slate-100">
+                <label class="flex items-center gap-2 text-xs py-1 border-b border-slate-100 cursor-pointer">
                   <input type="checkbox" ${s.Completada ? 'checked' : ''} onchange="toggleSubtarea('${s.ID_Subtarea}', this.checked)" class="accent-emerald-600" />
                   <span class="${s.Completada ? 'line-through text-slate-400' : 'text-slate-700'} flex-1">${s.Descripcion}</span>
                   <span class="text-[10px] text-slate-400">${s.Operario_Asignado}</span>
@@ -587,13 +768,23 @@
     }
 
     function toggleExpandir(idTarea) {
-      if (estadoApp.filasExpandidas.has(idTarea)) estadoApp.filasExpandidas.delete(idTarea);
-      else estadoApp.filasExpandidas.add(idTarea);
+      const id = String(idTarea).trim();
+      if (estadoApp.filasExpandidas.has(id)) estadoApp.filasExpandidas.delete(id);
+      else estadoApp.filasExpandidas.add(id);
+      renderizar();
+    }
+
+    function expandirContraerTodas() {
+      if (estadoApp.filasExpandidas.size > 0) {
+        estadoApp.filasExpandidas.clear();
+      } else {
+        estadoApp.tareas.forEach(t => estadoApp.filasExpandidas.add(String(t.ID_Tarea).trim()));
+      }
       renderizar();
     }
 
     async function toggleSubtarea(idSubtarea, completada) {
-      const sub = estadoApp.subtareas.find(s => s.ID_Subtarea === idSubtarea);
+      const sub = estadoApp.subtareas.find(s => String(s.ID_Subtarea).trim() === String(idSubtarea).trim());
       if (sub) {
         sub.Completada = completada;
         sub.Estado_Subtarea = completada ? 'Completada' : 'Pendiente';
@@ -603,84 +794,129 @@
     }
 
     async function cambiarEstadoTarea(idTarea, nuevoEstado) {
-      const tar = estadoApp.tareas.find(t => t.ID_Tarea === idTarea);
+      const tar = estadoApp.tareas.find(t => String(t.ID_Tarea).trim() === String(idTarea).trim());
       if (tar) tar.Estado = nuevoEstado;
       renderizar();
       await enviarAccionAPI({ action: 'cambiarEstadoTarea', id_tarea: idTarea, estado: nuevoEstado });
     }
 
-    async function agregarSubtarea(idTareaPadre) {
+    async function agregarSubtareaRapida(idTareaPadre) {
       const inputDesc = document.getElementById(`inputSubDesc-${idTareaPadre}`);
       const selectOp = document.getElementById(`inputSubOp-${idTareaPadre}`);
       const descripcion = inputDesc.value.trim();
       if (!descripcion) return;
 
-      const nueva = {
-        ID_Subtarea: 'SUB-' + String(estadoApp.subtareas.length + 1).padStart(3, '0'),
+      const nuevoSubId = 'SUB-' + String(estadoApp.subtareas.length + 1).padStart(3, '0');
+      estadoApp.subtareas.push({
+        ID_Subtarea: nuevoSubId,
         ID_Tarea_Padre: idTareaPadre,
         Descripcion: descripcion,
         Operario_Asignado: selectOp.value,
         Completada: false,
         Estado_Subtarea: 'Pendiente',
         Notas_Tecnicas: ''
-      };
-      estadoApp.subtareas.push(nueva);
+      });
       inputDesc.value = '';
       renderizar();
 
-      await enviarAccionAPI({ action: 'crearSubtarea', id_tarea_padre: idTareaPadre, descripcion, operario: selectOp.value });
+      await enviarAccionAPI({
+        action: 'crearSubtarea',
+        id_subtarea: nuevoSubId,
+        id_tarea_padre: idTareaPadre,
+        descripcion,
+        operario: selectOp.value
+      });
     }
 
-    function setQuickFilter(modo) {
-      estadoApp.quickFilter = modo;
-      document.getElementById('btnQuickAll').className = modo === 'ALL' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
-      document.getElementById('btnQuickPending').className = modo === 'PENDING' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500 text-slate-950' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
-      document.getElementById('btnQuickCritical').className = modo === 'CRITICAL' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-600 text-white' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
-      renderizar();
+    // =========================================================================
+    // MODAL DE CARGA DOBLE (TAREA PRINCIPAL / SUBTAREA EN ORDEN EXISTENTE)
+    // =========================================================================
+    function abrirModalCarga(tabInicial = 'TAREA') {
+      document.getElementById('modalCarga').classList.remove('hidden');
+      document.getElementById('modalCarga').classList.add('flex');
+      cambiarTabModal(tabInicial);
     }
 
-    function limpiarFiltros() {
-      document.getElementById('filtroTexto').value = '';
-      document.getElementById('filtroSector').value = '';
-      actualizarFiltroUbicacion();
-      document.getElementById('filtroEstado').value = '';
-      document.getElementById('filtroPrioridad').value = '';
-      document.getElementById('filtroPersona').value = '';
-      setQuickFilter('ALL');
+    function abrirModalSubtareaDirecta(idTareaPadre) {
+      abrirModalCarga('SUBTAREA');
+      document.getElementById('selectTareaPadreModal').value = idTareaPadre;
     }
 
-    function cambiarVista(vista) {
-      estadoApp.vista = vista;
-      document.getElementById('contenedorTabla').classList.toggle('hidden', vista !== 'TABLA');
-      document.getElementById('contenedorTarjetas').classList.toggle('hidden', vista !== 'TARJETAS');
-      document.getElementById('btnVistaTabla').className = vista === 'TABLA' ? 'px-3 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3 py-1.5 rounded-md text-slate-600';
-      document.getElementById('btnVistaTarjetas').className = vista === 'TARJETAS' ? 'px-3 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3 py-1.5 rounded-md text-slate-600';
+    function cerrarModalCarga() {
+      document.getElementById('modalCarga').classList.add('hidden');
+      document.getElementById('modalCarga').classList.remove('flex');
     }
 
-    function abrirModalNuevaTarea() {
-      document.getElementById('modalNuevaTarea').classList.remove('hidden');
-      document.getElementById('modalNuevaTarea').classList.add('flex');
+    function cambiarTabModal(tab) {
+      const esTarea = tab === 'TAREA';
+      document.getElementById('formNuevaTarea').classList.toggle('hidden', !esTarea);
+      document.getElementById('formNuevaSubtarea').classList.toggle('hidden', esTarea);
+
+      document.getElementById('tabBtnTarea').className = esTarea
+        ? 'py-2 rounded-lg bg-white text-slate-900 shadow'
+        : 'py-2 rounded-lg text-slate-600 hover:text-slate-900';
+      document.getElementById('tabBtnSubtarea').className = !esTarea
+        ? 'py-2 rounded-lg bg-white text-slate-900 shadow'
+        : 'py-2 rounded-lg text-slate-600 hover:text-slate-900';
     }
 
-    function cerrarModalNuevaTarea() {
-      document.getElementById('modalNuevaTarea').classList.add('hidden');
-      document.getElementById('modalNuevaTarea').classList.remove('flex');
+    function agregarFilaSubtareaModal() {
+      const cont = document.getElementById('contenedorSubtareasModal');
+      const ops = (estadoApp.config.Operarios || ['Juan Pérez', 'Carlos López', 'Pedro Sánchez'])
+        .map(o => `<option value="${o}">${o}</option>`).join('');
+      const div = document.createElement('div');
+      div.className = "flex gap-2 items-center fila-sub-modal";
+      div.innerHTML = `
+        <input type="text" placeholder="Descripción del paso..." class="sub-desc flex-1 border rounded-lg px-2.5 py-1.5 text-xs" />
+        <select class="sub-op border rounded-lg px-2 py-1.5 text-xs bg-white">${ops}</select>
+        <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-700 px-1"><i class="fa-solid fa-trash"></i></button>
+      `;
+      cont.appendChild(div);
     }
 
     async function guardarNuevaTarea(e) {
       e.preventDefault();
+      // Generar ID correlativo limpio
+      const numerosExistentes = estadoApp.tareas
+        .map(t => parseInt(String(t.ID_Tarea).replace(/\D/g, ''), 10))
+        .filter(n => !isNaN(n));
+      const proximoNum = numerosExistentes.length > 0 ? Math.max(...numerosExistentes) + 1 : 1;
+      const nuevoId = 'T-' + String(proximoNum).padStart(3, '0');
+
+      // Recolectar subtareas iniciales opcionales cargadas en el modal
+      const filasSub = document.querySelectorAll('.fila-sub-modal');
+      const subtareasIniciales = [];
+      filasSub.forEach((fila, idx) => {
+        const desc = fila.querySelector('.sub-desc').value.trim();
+        const op = fila.querySelector('.sub-op').value;
+        if (desc) {
+          const nuevoSubId = 'SUB-' + String(estadoApp.subtareas.length + idx + 1).padStart(3, '0');
+          subtareasIniciales.push({ id_subtarea: nuevoSubId, descripcion: desc, operario: op });
+          estadoApp.subtareas.push({
+            ID_Subtarea: nuevoSubId,
+            ID_Tarea_Padre: nuevoId,
+            Descripcion: desc,
+            Operario_Asignado: op,
+            Completada: false,
+            Estado_Subtarea: 'Pendiente',
+            Notas_Tecnicas: ''
+          });
+        }
+      });
+
       const payload = {
         action: 'crearTarea',
+        id_tarea: nuevoId,
         sector: document.getElementById('nuevoSector').value,
         ubicacion: document.getElementById('nuevaUbicacion').value,
         categoria: document.getElementById('nuevaCategoria').value,
         prioridad: document.getElementById('nuevaPrioridad').value,
         titulo: document.getElementById('nuevoTitulo').value,
         supervisor: document.getElementById('nuevoSupervisor').value,
-        observaciones: document.getElementById('nuevaObs').value
+        observaciones: document.getElementById('nuevaObs').value,
+        subtareas_iniciales: subtareasIniciales
       };
 
-      const nuevoId = 'T-' + String(estadoApp.tareas.length + 1).padStart(3, '0');
       estadoApp.tareas.unshift({
         ID_Tarea: nuevoId,
         Fecha_Creacion: new Date().toISOString().slice(0, 10),
@@ -693,12 +929,72 @@
         Estado: 'Pendiente',
         Observaciones: payload.observaciones
       });
+
       estadoApp.filasExpandidas.add(nuevoId);
-      cerrarModalNuevaTarea();
+      document.getElementById('contenedorSubtareasModal').innerHTML = '';
+      cerrarModalCarga();
       e.target.reset();
+      actualizarUbicacionesModal();
       renderizar();
 
       await enviarAccionAPI(payload);
+    }
+
+    async function guardarSubtareaDesdeModal(e) {
+      e.preventDefault();
+      const idPadre = document.getElementById('selectTareaPadreModal').value;
+      const descripcion = document.getElementById('inputDescSubModal').value.trim();
+      const operario = document.getElementById('selectOperarioSubModal').value;
+      const notas = document.getElementById('inputNotasSubModal').value.trim();
+      if (!idPadre || !descripcion) return;
+
+      const nuevoSubId = 'SUB-' + String(estadoApp.subtareas.length + 1).padStart(3, '0');
+      estadoApp.subtareas.push({
+        ID_Subtarea: nuevoSubId,
+        ID_Tarea_Padre: idPadre,
+        Descripcion: descripcion,
+        Operario_Asignado: operario,
+        Completada: false,
+        Estado_Subtarea: 'Pendiente',
+        Notas_Tecnicas: notas
+      });
+
+      estadoApp.filasExpandidas.add(idPadre);
+      cerrarModalCarga();
+      e.target.reset();
+      renderizar();
+
+      await enviarAccionAPI({
+        action: 'crearSubtarea',
+        id_subtarea: nuevoSubId,
+        id_tarea_padre: idPadre,
+        descripcion,
+        operario,
+        notas
+      });
+    }
+
+    function setQuickFilter(modo) {
+      estadoApp.quickFilter = modo;
+      document.getElementById('btnQuickAll').className = modo === 'ALL' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
+      document.getElementById('btnQuickPending').className = modo === 'PENDING' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500 text-slate-950' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
+      document.getElementById('btnQuickCritical').className = modo === 'CRITICAL' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-600 text-white' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
+      renderizar();
+    }
+
+    function limpiarFiltros() {
+      document.getElementById('filtroTexto').value = '';
+      Object.values(estadoApp.filtrosCheck).forEach(set => set.clear());
+      inicializarSelectoresYCheckboxes();
+      setQuickFilter('ALL');
+    }
+
+    function cambiarVista(vista) {
+      estadoApp.vista = vista;
+      document.getElementById('contenedorTabla').classList.toggle('hidden', vista !== 'TABLA');
+      document.getElementById('contenedorTarjetas').classList.toggle('hidden', vista !== 'TARJETAS');
+      document.getElementById('btnVistaTabla').className = vista === 'TABLA' ? 'px-3 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3 py-1.5 rounded-md text-slate-600';
+      document.getElementById('btnVistaTarjetas').className = vista === 'TARJETAS' ? 'px-3 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3 py-1.5 rounded-md text-slate-600';
     }
 
     cargarDatos();
