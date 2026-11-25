@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tablero de Control - Mantenimiento | Sheraton Pilar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body { background-color: #f1f5f9; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    .sheraton-navy { background-color: #1B365D; }
+    .sheraton-gold { color: #C5A880; }
+    .subtask-row { transition: all 0.2s ease; }
+  </style>
+</head>
+<body class="text-slate-800">
+
+  <!-- BARRA SUPERIOR -->
+  <header class="sheraton-navy text-white shadow-lg sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-xl font-bold sheraton-gold border border-white/20">
+          S
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-wide">SHERATON PILAR · INGENIERÍA Y MANTENIMIENTO</h1>
+          <p class="text-xs text-slate-300 flex items-center gap-2">
+            <span id="statusDot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+            <span id="statusText">Tablero de Control Operativo y Seguimiento de Subtareas</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="cargarDatos()" class="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium flex items-center gap-2 transition">
+          <i class="fa-solid fa-rotate"></i> Sincronizar
+        </button>
+        <button onclick="abrirModalNuevaTarea()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs flex items-center gap-2 shadow transition">
+          <i class="fa-solid fa-plus"></i> Nueva Orden de Trabajo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- SECCIÓN 1: KPIs E INDICADORES DE RESOLUCIÓN -->
+    <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+        <div class="text-xs font-semibold text-slate-400 uppercase">Total Órdenes</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTotal" class="text-2xl font-bold text-slate-800">0</span>
+          <i class="fa-solid fa-clipboard-list text-slate-300 text-xl"></i>
+        </div>
+      </div>
+
+      <div onclick="activarFiltroRapidoPendientes()" class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-amber-500 cursor-pointer hover:bg-amber-50/40 transition" title="Clic para filtrar pendientes">
+        <div class="text-xs font-semibold text-amber-700 uppercase">Activas / Pendientes</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiPendientes" class="text-2xl font-bold text-amber-600">0</span>
+          <span class="text-[11px] text-amber-600 font-medium underline">Ver pendientes</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-rose-600">
+        <div class="text-xs font-semibold text-rose-700 uppercase">Prioridad Crítica</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiCriticas" class="text-2xl font-bold text-rose-600">0</span>
+          <i class="fa-solid fa-triangle-exclamation text-rose-400 text-xl"></i>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-blue-600">
+        <div class="text-xs font-semibold text-blue-700 uppercase">En Proceso</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiEnProceso" class="text-2xl font-bold text-blue-600">0</span>
+          <i class="fa-solid fa-gears text-blue-300 text-xl"></i>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-emerald-600">
+        <div class="text-xs font-semibold text-emerald-700 uppercase">Tasa de Resolución</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTasaResolucion" class="text-2xl font-bold text-emerald-600">0%</span>
+          <span id="kpiCerradasTexto" class="text-xs text-slate-400">0 cerradas</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+        <div class="text-xs font-semibold text-slate-400 uppercase">Subtareas Listas</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiSubtareas" class="text-2xl font-bold text-indigo-600">0/0</span>
+          <span id="kpiSubtareasPct" class="text-xs font-semibold text-indigo-500">0%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: BARRA DE MÚLTIPLES FILTROS Y CONTROLES DE VISTA -->
+    <section class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-bold uppercase text-slate-400 mr-1"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Vistas Rápidas:</span>
+          <button id="btnQuickAll" onclick="setQuickFilter('ALL')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white transition">
+            Todas las Tareas
+          </button>
+          <button id="btnQuickPending" onclick="setQuickFilter('PENDING')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-800 transition">
+            🔥 Solo Pendientes / En Curso
+          </button>
+          <button id="btnQuickCritical" onclick="setQuickFilter('CRITICAL')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-rose-100 hover:text-rose-800 transition">
+            🚨 Urgencias Críticas
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div class="bg-slate-100 p-1 rounded-lg flex text-xs font-semibold">
+            <button id="btnVistaTabla" onclick="cambiarVista('TABLA')" class="px-3 py-1.5 rounded-md bg-white shadow text-slate-800 transition">
+              <i class="fa-solid fa-table mr-1"></i> Tabla General
+            </button>
+            <button id="btnVistaTarjetas" onclick="cambiarVista('TARJETAS')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">
+              <i class="fa-solid fa-grip mr-1"></i> Tarjetas
+            </button>
+          </div>
+          <button onclick="limpiarFiltros()" class="text-xs text-slate-500 hover:text-rose-600 px-2 py-1">
+            <i class="fa-solid fa-filter-circle-xmark mr-1"></i>Limpiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros combinables -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Buscar palabra o Habitación</label>
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input id="filtroTexto" oninput="renderizar()" type="text" placeholder="Ej: Suite 302, Las Vasijas..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Sector del Hotel</label>
+          <select id="filtroSector" onchange="actualizarFiltroUbicacion(); renderizar();" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
+            <option value="">Todos los sectores</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Ubicación Detalle</label>
+          <select id="filtroUbicacion" onchange="renderizar()" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
+            <option value="">Todas las ubicaciones</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Estado de Orden</label>
+          <select id="filtroEstado" onchange="renderizar()" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
+            <option value="">Todos los estados</option>
+            <option value="Pendiente">⚪ Pendiente</option>
+            <option value="En Proceso">🔵 En Proceso</option>
+            <option value="Esperando Repuesto">🟠 Esperando Repuesto</option>
+            <option value="Completada">🟢 Completada</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Prioridad</label>
+          <select id="filtroPrioridad" onchange="renderizar()" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
+            <option value="">Todas las prioridades</option>
+            <option value="Crítica">🔴 Crítica</option>
+            <option value="Alta">🟠 Alta</option>
+            <option value="Media">🟡 Media</option>
+            <option value="Baja">🟢 Baja</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Supervisor / Operario</label>
+          <select id="filtroPersona" onchange="renderizar()" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white">
+            <option value="">Todo el equipo</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: TABLA PRINCIPAL CON DESPLEGABLE DE SUBTAREAS -->
+    <section id="contenedorTabla" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="sheraton-navy text-white text-[11px] uppercase tracking-wider">
+              <th class="py-3 px-3 w-10 text-center">Sub</th>
+              <th class="py-3 px-3">ID / Fecha</th>
+              <th class="py-3 px-3">Sector y Ubicación</th>
+              <th class="py-3 px-3">Tarea Principal / Categoría</th>
+              <th class="py-3 px-3 text-center">Prioridad</th>
+              <th class="py-3 px-3">Supervisor</th>
+              <th class="py-3 px-3 text-center">Estado</th>
+              <th class="py-3 px-3 w-44">Progreso Subtareas</th>
+            </tr>
+          </thead>
+          <tbody id=" cuerpoTabla" class="divide-y divide-slate-200 text-xs"></tbody>
+        </table>
+      </div>
+      <div id="mensajeSinResultados" class="hidden py-12 text-center text-slate-400 text-sm">
+        No se encontraron tareas con los filtros seleccionados.
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: VISTA DE TARJETAS -->
+    <section id="contenedorTarjetas" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></section>
+
+  </main>
+
+  <!-- MODAL NUEVA ORDEN DE TRABAJO -->
+  <div id="modalNuevaTarea" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
+      <div class="sheraton-navy text-white px-5 py-4 flex justify-between items-center">
+        <h3 class="font-bold text-sm">Nueva Orden de Trabajo - Mantenimiento</h3>
+        <button onclick="cerrarModalNuevaTarea()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="guardarNuevaTarea(event)" class="p-5 space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-600 block mb-1">Sector *</label>
+            <select id="nuevoSector" required onchange="actualizarUbicacionesModal()" class="w-full border rounded-lg px-3 py-2"></select>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600 block mb-1">Ubicación Detalle *</label>
+            <select id="nuevaUbicacion" required class="w-full border rounded-lg px-3 py-2"></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-600 block mb-1">Categoría *</label>
+            <select id="nuevaCategoria" required class="w-full border rounded-lg px-3 py-2"></select>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600 block mb-1">Prioridad *</label>
+            <select id="nuevaPrioridad" required class="w-full border rounded-lg px-3 py-2">
+              <option value="Media">🟡 Media</option>
+              <option value="Alta">🟠 Alta</option>
+              <option value="Crítica">🔴 Crítica</option>
+              <option value="Baja">🟢 Baja</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="font-semibold text-slate-600 block mb-1">Título del Trabajo *</label>
+          <input id="nuevoTitulo" required type="text" placeholder="Ej: Revisión de equipo frío o cambio de luminaria" class="w-full border rounded-lg px-3 py-2" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-600 block mb-1">Supervisor Responsable *</label>
+            <select id="nuevoSupervisor" required class="w-full border rounded-lg px-3 py-2"></select>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-600 block mb-1">Observaciones</label>
+            <input id="nuevaObs" type="text" placeholder="Notas u horario sugerido" class="w-full border rounded-lg px-3 py-2" />
+          </div>
+        </div>
+        <div class="pt-3 flex justify-end gap-2 border-t">
+          <button type="button" onclick="cerrarModalNuevaTarea()" class="px-4 py-2 rounded-lg border text-slate-600">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-lg sheraton-navy text-white font-semibold">Guardar Orden</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // CONFIGURACIÓN: Pegá acá la URL "/exec" de tu Google Apps Script
+    // =========================================================================
+    const API_URL = ""; // Ej: "https://script.google.com/macros/s/AKfycb.../exec"
+
+    let estadoApp = {
+      vista: 'TABLA',
+      quickFilter: 'ALL',
+      filasExpandidas: new Set(['T-001']),
+      tareas: [],
+      subtareas: [],
+      config: {},
+      ubicaciones: {}
+    };
+
+    // Datos iniciales del Sheraton Pilar (funcionan al instante y se actualizan cuando pegás API_URL)
+    const DATOS_INICIALES = {
+      tareas: [
+        { ID_Tarea: 'T-001', Fecha_Creacion: '2026-11-24', Sector: 'Habitaciones', Ubicacion_Detalle: 'Habitación 302', Categoria: 'Aire Acondicionado / Calefacción', Titulo: 'Reparación y mantenimiento integral de equipo HVAC', Prioridad: 'Alta', Supervisor: 'Martín Gómez', Estado: 'En Proceso', Fecha_Cierre: '', Observaciones: 'Huésped ingresa 15 hs' },
+        { ID_Tarea: 'T-002', Fecha_Creacion: '2026-11-25', Sector: 'Restaurantes', Ubicacion_Detalle: 'Las Vasijas', Categoria: 'Electricidad / Iluminación', Titulo: 'Reemplazo de dimers y circuitos de iluminación cálida en salón', Prioridad: 'Media', Supervisor: 'Martín Gómez', Estado: 'Pendiente', Fecha_Cierre: '', Observaciones: 'Realizar entre las 16 y 18 hs' },
+        { ID_Tarea: 'T-003', Fecha_Creacion: '2026-11-25', Sector: 'Restaurantes', Ubicacion_Detalle: 'Don Giovanni', Categoria: 'Equipamiento Gastronómico', Titulo: 'Calibración de horno convector y cambio de burlete cámara', Prioridad: 'Crítica', Supervisor: 'Laura Díaz', Estado: 'En Proceso', Fecha_Cierre: '', Observaciones: 'Prioridad servicio de cena' },
+        { ID_Tarea: 'T-004', Fecha_Creacion: '2026-11-23', Sector: 'Piscina / Spa', Ubicacion_Detalle: 'Piscina Climatizada (In)', Categoria: 'Preventivo / Bombas', Titulo: 'Puesta a punto semanal de bombas y caldera de piscina', Prioridad: 'Media', Supervisor: 'Laura Díaz', Estado: 'Completada', Fecha_Cierre: '2026-11-24', Observaciones: 'Parámetros OK' }
+      ],
+      subtareas: [
+        { ID_Subtarea: 'SUB-001', ID_Tarea_Padre: 'T-001', Descripcion: 'Limpieza de filtros y revisión de bandeja de drenaje', Operario_Asignado: 'Juan Pérez', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-24', Notas_Tecnicas: 'Filtros lavados' },
+        { ID_Subtarea: 'SUB-002', ID_Tarea_Padre: 'T-001', Descripcion: 'Medición de presión de gas refrigerante', Operario_Asignado: 'Juan Pérez', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-24', Notas_Tecnicas: 'Presión normal' },
+        { ID_Subtarea: 'SUB-003', ID_Tarea_Padre: 'T-001', Descripcion: 'Reemplazo de termostato digital de pared', Operario_Asignado: 'Carlos López', Completada: false, Estado_Subtarea: 'En Proceso', Fecha_Ejecucion: '', Notas_Tecnicas: 'Retirando repuesto de pañol' },
+        { ID_Subtarea: 'SUB-004', ID_Tarea_Padre: 'T-002', Descripcion: 'Verificar térmica en tablero seccional de Las Vasijas', Operario_Asignado: 'Pedro Sánchez', Completada: false, Estado_Subtarea: 'Pendiente', Fecha_Ejecucion: '', Notas_Tecnicas: '' },
+        { ID_Subtarea: 'SUB-005', ID_Tarea_Padre: 'T-002', Descripcion: 'Cambiar 6 lámparas AR111 LED cálidas en sector central', Operario_Asignado: 'Pedro Sánchez', Completada: false, Estado_Subtarea: 'Pendiente', Fecha_Ejecucion: '', Notas_Tecnicas: '' },
+        { ID_Subtarea: 'SUB-006', ID_Tarea_Padre: 'T-003', Descripcion: 'Retirar burlete dañado y limpiar marco en Don Giovanni', Operario_Asignado: 'Juan Pérez', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-25', Notas_Tecnicas: 'Listo' },
+        { ID_Subtarea: 'SUB-007', ID_Tarea_Padre: 'T-003', Descripcion: 'Colocar burlete nuevo y medir corte de termostato a 3°C', Operario_Asignado: 'Miguel Torres', Completada: false, Estado_Subtarea: 'En Proceso', Fecha_Ejecucion: '', Notas_Tecnicas: 'En prueba' },
+        { ID_Subtarea: 'SUB-008', ID_Tarea_Padre: 'T-004', Descripcion: 'Retrolavado de filtros de arena e inspección de válvulas', Operario_Asignado: 'Carlos López', Completada: true, Estado_Subtarea: 'Completada', Fecha_Ejecucion: '2026-11-24', Notas_Tecnicas: 'OK' }
+      ],
+      config: {
+        Categorias: ['Aire Acondicionado / Calefacción', 'Electricidad / Iluminación', 'Plomería / Sanitarios', 'Carpintería / Cerrajería', 'Pintura / Albañilería', 'Equipamiento Gastronómico', 'Preventivo / Bombas'],
+        Supervisores: ['Martín Gómez', 'Laura Díaz', 'Roberto Fernández', 'Guardia Turno Noche'],
+        Operarios: ['Juan Pérez', 'Carlos López', 'Pedro Sánchez', 'Miguel Torres', 'Diego Romero']
+      },
+      ubicaciones: {
+        'Habitaciones': ['Habitación 101', 'Habitación 102', 'Habitación 201', 'Habitación 214', 'Habitación 302', 'Suite Presidencial', 'Suite Gobernador'],
+        'Restaurantes': ['Lobby Bar', 'Las Vasijas', 'Don Giovanni', 'La Federala'],
+        'Cocinas / A&B': ['Cocina Principal', 'Cocina Don Giovanni', 'Cocina La Federala', 'Pastelería / Panadería', 'Cámara Frigorífica 1', 'Cámara Frigorífica 2'],
+        'Salones de Eventos': ['Salón Los Girasoles', 'Salón Los Ceibos', 'Salón Los Jazmines', 'Salón Pampa', 'Foyer de Eventos'],
+        'Piscina / Spa': ['Piscina Climatizada (In)', 'Piscina Exterior (Out)', 'Health Club & Spa', 'Gimnasio (Fitness Center)', 'Sauna / Hidromasaje'],
+        'Lobby / Áreas Públicas': ['Front Desk / Recepción', 'Lobby Principal', 'Baños Públicos Lobby', 'Ascensores Huéspedes'],
+        'Áreas Internas / Máquinas': ['Comedor de Personal', 'Vestuarios de Personal', 'Oficinas RRHH / Administración', 'Sala de Calderas / Bombas']
+      }
+    };
+
+    async function cargarDatos() {
+      const statusText = document.getElementById('statusText');
+      if (!API_URL) {
+        estadoApp.tareas = DATOS_INICIALES.tareas;
+        estadoApp.subtareas = DATOS_INICIALES.subtareas;
+        estadoApp.config = DATOS_INICIALES.config;
+        estadoApp.ubicaciones = DATOS_INICIALES.ubicaciones;
+        statusText.textContent = "Modo Vista Previa (Pegá tu API_URL en el código para conectar en vivo con Google Sheets)";
+        inicializarSelectores();
+        renderizar();
+        return;
+      }
+
+      try {
+        statusText.textContent = "Sincronizando con Google Sheets...";
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        estadoApp.tareas = data.tareas || [];
+        estadoApp.subtareas = data.subtareas || [];
+        estadoApp.config = data.config || DATOS_INICIALES.config;
+        estadoApp.ubicaciones = data.ubicaciones || DATOS_INICIALES.ubicaciones;
+        statusText.textContent = "Conectado en tiempo real con Base Madre Google Sheets";
+        inicializarSelectores();
+        renderizar();
+      } catch (e) {
+        statusText.textContent = "Error al conectar con API_URL. Mostrando datos locales.";
+        console.error(e);
+      }
+    }
+
+    function inicializarSelectores() {
+      const sectores = Object.keys(estadoApp.ubicaciones);
+      const selSector = document.getElementById('filtroSector');
+      const valorActualSector = selSector.value;
+      selSector.innerHTML = '<option value="">Todos los sectores</option>' +
+        sectores.map(s => `<option value="${s}">${s}</option>`).join('');
+      selSector.value = valorActualSector;
+
+      // Personas (Supervisores + Operarios)
+      const personas = [...new Set([...(estadoApp.config.Supervisores || []), ...(estadoApp.config.Operarios || [])])];
+      const selPersona = document.getElementById('filtroPersona');
+      selPersona.innerHTML = '<option value="">Todo el equipo</option>' +
+        personas.map(p => `<option value="${p}">${p}</option>`).join('');
+
+      // Modal Nueva Tarea
+      document.getElementById('nuevoSector').innerHTML = sectores.map(s => `<option value="${s}">${s}</option>`).join('');
+      document.getElementById('nuevaCategoria').innerHTML = (estadoApp.config.Categorias || []).map(c => `<option value="${c}">${c}</option>`).join('');
+      document.getElementById('nuevoSupervisor').innerHTML = (estadoApp.config.Supervisores || []).map(s => `<option value="${s}">${s}</option>`).join('');
+      actualizarUbicacionesModal();
+      actualizarFiltroUbicacion();
+    }
+
+    function actualizarFiltroUbicacion() {
+      const sector = document.getElementById('filtroSector').value;
+      const selUbi = document.getElementById('filtroUbicacion');
+      let lista = [];
+      if (sector && estadoApp.ubicaciones[sector]) {
+        lista = estadoApp.ubicaciones[sector];
+      } else {
+        Object.values(estadoApp.ubicaciones).forEach(arr => lista.push(...arr));
+      }
+      selUbi.innerHTML = '<option value="">Todas las ubicaciones</option>' +
+        lista.map(u => `<option value="${u}">${u}</option>`).join('');
+    }
+
+    function actualizarUbicacionesModal() {
+      const sector = document.getElementById('nuevoSector').value;
+      const lista = estadoApp.ubicaciones[sector] || [];
+      document.getElementById('nuevaUbicacion').innerHTML = lista.map(u => `<option value="${u}">${u}</option>`).join('');
+    }
+
+    function calcularProgresoTarea(idTarea) {
+      const subs = estadoApp.subtareas.filter(s => s.ID_Tarea_Padre === idTarea);
+      if (subs.length === 0) return { total: 0, listas: 0, pct: 0 };
+      const listas = subs.filter(s => s.Completada === true || String(s.Completada).toUpperCase() === 'TRUE').length;
+      return { total: subs.length, listas, pct: Math.round((listas / subs.length) * 100) };
+    }
+
+    function obtenerTareasFiltradas() {
+      const txt = document.getElementById('filtroTexto').value.toLowerCase().trim();
+      const sec = document.getElementById('filtroSector').value;
+      const ubi = document.getElementById('filtroUbicacion').value;
+      const est = document.getElementById('filtroEstado').value;
+      const pri = document.getElementById('filtroPrioridad').value;
+      const per = document.getElementById('filtroPersona').value;
+
+      return estadoApp.tareas.filter(t => {
+        const subsDeTarea = estadoApp.subtareas.filter(s => s.ID_Tarea_Padre === t.ID_Tarea);
+        if (estadoApp.quickFilter === 'PENDING' && t.Estado === 'Completada') return false;
+        if (estadoApp.quickFilter === 'CRITICAL' && (t.Prioridad !== 'Crítica' || t.Estado === 'Completada')) return false;
+
+        if (sec && t.Sector !== sec) return false;
+        if (ubi && t.Ubicacion_Detalle !== ubi) return false;
+        if (est && t.Estado !== est) return false;
+        if (pri && t.Prioridad !== pri) return false;
+        if (per) {
+          const coincideSup = t.Supervisor === per;
+          const coincideOp = subsDeTarea.some(s => s.Operario_Asignado === per);
+          if (!coincideSup && !coincideOp) return false;
+        }
+        if (txt) {
+          const blob = `${t.ID_Tarea} ${t.Titulo} ${t.Sector} ${t.Ubicacion_Detalle} ${t.Categoria} ${t.Observaciones}`.toLowerCase();
+          const subBlob = subsDeTarea.map(s => s.Descripcion.toLowerCase()).join(' ');
+          if (!blob.includes(txt) && !subBlob.includes(txt)) return false;
+        }
+        return true;
+      });
+    }
+
+    function actualizarKPIs() {
+      const total = estadoApp.tareas.length;
+      const cerradas = estadoApp.tareas.filter(t => t.Estado === 'Completada').length;
+      const pendientes = total - cerradas;
+      const criticas = estadoApp.tareas.filter(t => t.Prioridad === 'Crítica' && t.Estado !== 'Completada').length;
+      const enProceso = estadoApp.tareas.filter(t => t.Estado === 'En Proceso').length;
+      const tasa = total > 0 ? Math.round((cerradas / total) * 100) : 0;
+
+      const totalSub = estadoApp.subtareas.length;
+      const subListas = estadoApp.subtareas.filter(s => s.Completada === true || String(s.Completada).toUpperCase() === 'TRUE').length;
+      const subPct = totalSub > 0 ? Math.round((subListas / totalSub) * 100) : 0;
+
+      document.getElementById('kpiTotal').textContent = total;
+      document.getElementById('kpiPendientes').textContent = pendientes;
+      document.getElementById('kpiCriticas').textContent = criticas;
+      document.getElementById('kpiEnProceso').textContent = enProceso;
+      document.getElementById('kpiTasaResolucion').textContent = `${tasa}%`;
+      document.getElementById('kpiCerradasTexto').textContent = `${cerradas} cerradas`;
+      document.getElementById('kpiSubtareas').textContent = `${subListas}/${totalSub}`;
+      document.getElementById('kpiSubtareasPct').textContent = `${subPct}%`;
+    }
+
+    function badgePrioridad(p) {
+      const map = {
+        'Crítica': 'bg-rose-100 text-rose-800 border-rose-300',
+        'Alta': 'bg-orange-100 text-orange-800 border-orange-300',
+        'Media': 'bg-amber-100 text-amber-800 border-amber-300',
+        'Baja': 'bg-emerald-100 text-emerald-800 border-emerald-300'
+      };
+      return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${map[p] || 'bg-slate-100'}">${p}</span>`;
+    }
+
+    function renderizar() {
+      actualizarKPIs();
+      const filtradas = obtenerTareasFiltradas();
+      const tbody = document.getElementById('cuerpoTabla');
+      const cards = document.getElementById('contenedorTarjetas');
+      const sinRes = document.getElementById('mensajeSinResultados');
+
+      sinRes.classList.toggle('hidden', filtradas.length > 0);
+      tbody.innerHTML = '';
+      cards.innerHTML = '';
+
+      filtradas.forEach(t => {
+        const prog = calcularProgresoTarea(t.ID_Tarea);
+        const expandida = estadoApp.filasExpandidas.has(t.ID_Tarea);
+        const subs = estadoApp.subtareas.filter(s => s.ID_Tarea_Padre === t.ID_Tarea);
+
+        // 1. FILA PRINCIPAL EN LA TABLA
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-center">
+            <button onclick="toggleExpandir('${t.ID_Tarea}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">
+              <i class="fa-solid ${expandida ? 'fa-chevron-down' : 'fa-chevron-right'}"></i>
+            </button>
+          </td>
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-900">${t.ID_Tarea}</div>
+            <div class="text-[11px] text-slate-400">${t.Fecha_Creacion}</div>
+          </td>
+          <td class="py-3 px-3">
+            <div class="font-semibold text-slate-800">${t.Ubicacion_Detalle}</div>
+            <div class="text-[11px] text-slate-500">${t.Sector}</div>
+          </td>
+          <td class="py-3 px-3">
+            <div class="font-semibold text-slate-900">${t.Titulo}</div>
+            <div class="text-[11px] text-slate-500">${t.Categoria} ${t.Observaciones ? '· <span class="text-amber-700 font-medium">' + t.Observaciones + '</span>' : ''}</div>
+          </td>
+          <td class="py-3 px-3 text-center">${badgePrioridad(t.Prioridad)}</td>
+          <td class="py-3 px-3 font-medium text-slate-700">${t.Supervisor}</td>
+          <td class="py-3 px-3 text-center">
+            <select onchange="cambiarEstadoTarea('${t.ID_Tarea}', this.value)" class="px-2 py-1 rounded-lg text-xs font-bold border ${
+              t.Estado === 'Completada' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
+              t.Estado === 'En Proceso' ? 'bg-blue-50 text-blue-800 border-blue-300' :
+              t.Estado === 'Esperando Repuesto' ? 'bg-orange-50 text-orange-800 border-orange-300' :
+              'bg-slate-100 text-slate-700 border-slate-300'
+            }">
+              <option value="Pendiente" ${t.Estado === 'Pendiente' ? 'selected' : ''}>⚪ Pendiente</option>
+              <option value="En Proceso" ${t.Estado === 'En Proceso' ? 'selected' : ''}>🔵 En Proceso</option>
+              <option value="Esperando Repuesto" ${t.Estado === 'Esperando Repuesto' ? 'selected' : ''}>🟠 Esp. Repuesto</option>
+              <option value="Completada" ${t.Estado === 'Completada' ? 'selected' : ''}>🟢 Completada</option>
+            </select>
+          </td>
+          <td class="py-3 px-3">
+            <div class="flex justify-between text-[11px] font-semibold mb-1">
+              <span>${prog.listas}/${prog.total} pasos</span>
+              <span class="${prog.pct === 100 ? 'text-emerald-600' : 'text-blue-600'}">${prog.pct}%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div class="h-full ${prog.pct === 100 ? 'bg-emerald-500' : 'bg-blue-600'}" style="width: ${prog.pct}%"></div>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+
+        // 2. SUBTAREAS DESPLEGABLES DEBAJO DE LA FILA
+        if (expandida) {
+          const trSub = document.createElement('tr');
+          trSub.className = "bg-slate-50/90";
+          trSub.innerHTML = `
+            <td colspan="8" class="p-4 border-l-4 border-blue-800">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold uppercase text-slate-600"><i class="fa-solid fa-list-check mr-1 text-blue-700"></i>Subtareas Operativas de ${t.ID_Tarea} (${t.Ubicacion_Detalle})</span>
+              </div>
+              <div class="space-y-1.5 mb-3">
+                ${subs.length === 0 ? '<div class="text-xs text-slate-400 italic">No hay subtareas cargadas todavía.</div>' :
+                  subs.map(s => `
+                    <label class="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-blue-400 cursor-pointer">
+                      <div class="flex items-center gap-2.5">
+                        <input type="checkbox" ${s.Completada ? 'checked' : ''} onchange="toggleSubtarea('${s.ID_Subtarea}', this.checked)" class="w-4 h-4 accent-emerald-600 rounded cursor-pointer" />
+                        <span class="${s.Completada ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${s.Descripcion}</span>
+                      </div>
+                      <div class="flex items-center gap-3 text-[11px]">
+                        <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-600 font-medium"><i class="fa-regular fa-user mr-1"></i>${s.Operario_Asignado}</span>
+                        <span class="text-slate-400">${s.Notas_Tecnicas || ''}</span>
+                      </div>
+                    </label>
+                  `).join('')
+                }
+              </div>
+              <!-- Formulario rápido para agregar subtarea -->
+              <div class="flex flex-wrap gap-2 items-center bg-white p-2 rounded-lg border border-slate-200">
+                <input id="inputSubDesc-${t.ID_Tarea}" type="text" placeholder="Agregar nuevo paso o subtarea..." class="flex-1 min-w-[200px] text-xs px-2.5 py-1.5 border rounded" />
+                <select id="inputSubOp-${t.ID_Tarea}" class="text-xs px-2.5 py-1.5 border rounded bg-white">
+                  ${(estadoApp.config.Operarios || []).map(op => `<option value="${op}">${op}</option>`).join('')}
+                </select>
+                <button onclick="agregarSubtarea('${t.ID_Tarea}')" class="px-3 py-1.5 rounded bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold">
+                  + Sumar Subtarea
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(trSub);
+        }
+
+        // 3. TARJETA (PARA VISTA KANBAN / MÓVIL)
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between space-y-3";
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start gap-2">
+              <span class="text-xs font-bold text-slate-400">${t.ID_Tarea} · ${t.Sector}</span>
+              ${badgePrioridad(t.Prioridad)}
+            </div>
+            <div class="mt-1 font-bold text-sm text-slate-900">${t.Ubicacion_Detalle} — ${t.Titulo}</div>
+            <p class="text-xs text-slate-500 mt-1">${t.Categoria} · Sup: ${t.Supervisor}</p>
+            <div class="mt-3 space-y-1">
+              ${subs.map(s => `
+                <label class="flex items-center gap-2 text-xs py-1 border-b border-slate-100">
+                  <input type="checkbox" ${s.Completada ? 'checked' : ''} onchange="toggleSubtarea('${s.ID_Subtarea}', this.checked)" class="accent-emerald-600" />
+                  <span class="${s.Completada ? 'line-through text-slate-400' : 'text-slate-700'} flex-1">${s.Descripcion}</span>
+                  <span class="text-[10px] text-slate-400">${s.Operario_Asignado}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+          <div class="pt-2 border-t flex items-center justify-between text-xs">
+            <span class="font-semibold text-slate-600">Avance: ${prog.pct}% (${prog.listas}/${prog.total})</span>
+            <span class="font-bold text-blue-700">${t.Estado}</span>
+          </div>
+        `;
+        cards.appendChild(card);
+      });
+    }
+
+    function toggleExpandir(idTarea) {
+      if (estadoApp.filasExpandidas.has(idTarea)) estadoApp.filasExpandidas.delete(idTarea);
+      else estadoApp.filasExpandidas.add(idTarea);
+      renderizar();
+    }
+
+    async function toggleSubtarea(idSubtarea, completada) {
+      const sub = estadoApp.subtareas.find(s => s.ID_Subtarea === idSubtarea);
+      if (sub) {
+        sub.Completada = completada;
+        sub.Estado_Subtarea = completada ? 'Completada' : 'Pendiente';
+      }
+      renderizar();
+      if (API_URL) {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleSubtarea', id_subtarea: idSubtarea, completada }) });
+      }
+    }
+
+    async function cambiarEstadoTarea(idTarea, nuevoEstado) {
+      const tar = estadoApp.tareas.find(t => t.ID_Tarea === idTarea);
+      if (tar) tar.Estado = nuevoEstado;
+      renderizar();
+      if (API_URL) {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'cambiarEstadoTarea', id_tarea: idTarea, estado: nuevoEstado }) });
+      }
+    }
+
+    async function agregarSubtarea(idTareaPadre) {
+      const inputDesc = document.getElementById(`inputSubDesc-${idTareaPadre}`);
+      const selectOp = document.getElementById(`inputSubOp-${idTareaPadre}`);
+      const descripcion = inputDesc.value.trim();
+      if (!descripcion) return;
+
+      const nueva = {
+        ID_Subtarea: 'SUB-' + String(estadoApp.subtareas.length + 1).padStart(3, '0'),
+        ID_Tarea_Padre: idTareaPadre,
+        Descripcion: descripcion,
+        Operario_Asignado: selectOp.value,
+        Completada: false,
+        Estado_Subtarea: 'Pendiente',
+        Notas_Tecnicas: ''
+      };
+      estadoApp.subtareas.push(nueva);
+      inputDesc.value = '';
+      renderizar();
+
+      if (API_URL) {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'crearSubtarea', id_tarea_padre: idTareaPadre, descripcion, operario: selectOp.value }) });
+      }
+    }
+
+    function setQuickFilter(modo) {
+      estadoApp.quickFilter = modo;
+      document.getElementById('btnQuickAll').className = modo === 'ALL' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
+      document.getElementById('btnQuickPending').className = modo === 'PENDING' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500 text-slate-950' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
+      document.getElementById('btnQuickCritical').className = modo === 'CRITICAL' ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-600 text-white' : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700';
+      renderizar();
+    }
+
+    function activarFiltroRapidoPendientes() {
+      setQuickFilter('PENDING');
+    }
+
+    function limpiarFiltros() {
+      document.getElementById('filtroTexto').value = '';
+      document.getElementById('filtroSector').value = '';
+      actualizarFiltroUbicacion();
+      document.getElementById('filtroEstado').value = '';
+      document.getElementById('filtroPrioridad').value = '';
+      document.getElementById('filtroPersona').value = '';
+      setQuickFilter('ALL');
+    }
+
+    function cambiarVista(vista) {
+      estadoApp.vista = vista;
+      document.getElementById('contenedorTabla').classList.toggle('hidden', vista !== 'TABLA');
+      document.getElementById('contenedorTarjetas').classList.toggle('hidden', vista !== 'TARJETAS');
+      document.getElementById('btnVistaTabla').className = vista === 'TABLA' ? 'px-3 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3 py-1.5 rounded-md text-slate-600';
+      document.getElementById('btnVistaTarjetas').className = vista === 'TARJETAS' ? 'px-3 py-1.5 rounded-md bg-white shadow text-slate-800' : 'px-3 py-1.5 rounded-md text-slate-600';
+    }
+
+    function abrirModalNuevaTarea() {
+      document.getElementById('modalNuevaTarea').classList.remove('hidden');
+      document.getElementById('modalNuevaTarea').classList.add('flex');
+    }
+
+    function cerrarModalNuevaTarea() {
+      document.getElementById('modalNuevaTarea').classList.add('hidden');
+      document.getElementById('modalNuevaTarea').classList.remove('flex');
+    }
+
+    async function guardarNuevaTarea(e) {
+      e.preventDefault();
+      const payload = {
+        action: 'crearTarea',
+        sector: document.getElementById('nuevoSector').value,
+        ubicacion: document.getElementById('nuevaUbicacion').value,
+        categoria: document.getElementById('nuevaCategoria').value,
+        prioridad: document.getElementById('nuevaPrioridad').value,
+        titulo: document.getElementById('nuevoTitulo').value,
+        supervisor: document.getElementById('nuevoSupervisor').value,
+        observaciones: document.getElementById('nuevaObs').value
+      };
+
+      const nuevoId = 'T-' + String(estadoApp.tareas.length + 1).padStart(3, '0');
+      estadoApp.tareas.unshift({
+        ID_Tarea: nuevoId,
+        Fecha_Creacion: new Date().toISOString().slice(0, 10),
+        Sector: payload.sector,
+        Ubicacion_Detalle: payload.ubicacion,
+        Categoria: payload.categoria,
+        Titulo: payload.titulo,
+        Prioridad: payload.prioridad,
+        Supervisor: payload.supervisor,
+        Estado: 'Pendiente',
+        Observaciones: payload.observaciones
+      });
+      estadoApp.filasExpandidas.add(nuevoId);
+      cerrarModalNuevaTarea();
+      e.target.reset();
+      renderizar();
+
+      if (API_URL) {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+      }
+    }
+
+    // corregimos id de tbody si tuviera espacio
+    document.querySelector('tbody').id = 'cuerpoTabla';
+    cargarDatos();
+  </script>
+</body>
+</html>
